@@ -1,0 +1,1237 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Asignación de Campo PT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zilla+Slab:wght@500;600;700&family=Work+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --parchment: #f3ede2; --surface: #fffdf8; --surface-sunken: #ebe2cd;
+    --ink: #2c2620; --ink-soft: #6c6252; --border: #ddd0af;
+    --clay: #b5602f; --clay-dark: #7e3f1c; --clay-tint: #f2e0cd;
+    --green: #4c7a4f; --green-tint: #e3ecdf;
+    --amber: #a67a2a; --amber-tint: #f2e6c8;
+    --rose: #ab4d3f; --rose-tint: #f4e0da; --sage: #8a8171;
+    --shadow: 0 1px 2px rgba(44,38,32,.07), 0 10px 26px -14px rgba(44,38,32,.24);
+    --radius: 10px; color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --parchment: #17140f; --surface: #201b14; --surface-sunken: #292219;
+      --ink: #efe7d8; --ink-soft: #b3a892; --border: #3a3021;
+      --clay: #e08a52; --clay-dark: #f0a978; --clay-tint: #362415;
+      --green: #7cab7c; --green-tint: #212c1f;
+      --amber: #d1a851; --amber-tint: #332c17;
+      --rose: #d3776a; --rose-tint: #34211d; --sage: #a89a80;
+      --shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 26px -14px rgba(0,0,0,.55);
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"]{
+    --parchment: #17140f; --surface: #201b14; --surface-sunken: #292219;
+    --ink: #efe7d8; --ink-soft: #b3a892; --border: #3a3021;
+    --clay: #e08a52; --clay-dark: #f0a978; --clay-tint: #362415;
+    --green: #7cab7c; --green-tint: #212c1f;
+    --amber: #d1a851; --amber-tint: #332c17;
+    --rose: #d3776a; --rose-tint: #34211d; --sage: #a89a80;
+    --shadow: 0 1px 2px rgba(0,0,0,.35), 0 10px 26px -14px rgba(0,0,0,.55);
+    color-scheme: dark;
+  }
+
+  *{ box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{ margin:0; background:var(--parchment); color:var(--ink); font-family:"Work Sans", ui-sans-serif, system-ui, sans-serif; font-size:14px; line-height:1.5; }
+  h1,h2,h3{ font-family:"Zilla Slab", Georgia, serif; font-weight:600; letter-spacing:-0.01em; text-wrap:balance; margin:0; }
+  .mono{ font-family:"IBM Plex Mono", ui-monospace, monospace; font-variant-numeric:tabular-nums; }
+  button, input, select, textarea{ font-family:inherit; font-size:inherit; color:inherit; }
+
+  .app{ display:grid; grid-template-columns:224px 1fr; min-height:100vh; }
+  .sidebar{ background:var(--surface); border-right:1px solid var(--border); padding:24px 16px; display:flex; flex-direction:column; gap:26px; }
+  .brand .eyebrow{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--sage); }
+  .brand h1{ font-size:19px; margin-top:2px; }
+  nav{ display:flex; flex-direction:column; gap:2px; }
+  .navbtn{ display:flex; align-items:center; gap:10px; text-align:left; padding:9px 10px; border-radius:8px; border:none; background:transparent; color:var(--ink-soft); cursor:pointer; font-size:13.5px; font-weight:500; }
+  .navbtn:hover{ background:var(--surface-sunken); color:var(--ink); }
+  .navbtn.active{ background:var(--clay-tint); color:var(--clay-dark); }
+  .navbtn .dot{ width:6px; height:6px; border-radius:50%; background:currentColor; opacity:.55; flex:none; }
+  .sidebar-foot{ margin-top:auto; padding:10px 8px; font-size:11.5px; color:var(--sage); border-top:1px solid var(--border); padding-top:14px; }
+
+  main{ padding:26px 32px 60px; max-width:1240px; }
+  .topbar{ display:flex; align-items:baseline; justify-content:space-between; gap:16px; margin-bottom:16px; flex-wrap:wrap; }
+  .topbar h2{ font-size:23px; }
+  .topbar .sub{ color:var(--ink-soft); font-size:13px; margin-top:2px; }
+
+  .btn{ display:inline-flex; align-items:center; gap:6px; border:1px solid transparent; border-radius:8px; padding:8px 14px; font-weight:500; font-size:13.5px; cursor:pointer; background:var(--clay); color:#fffaf3; }
+  .btn:hover{ background:var(--clay-dark); }
+  .btn.secondary{ background:var(--surface); color:var(--ink); border-color:var(--border); }
+  .btn.secondary:hover{ background:var(--surface-sunken); }
+  .btn.danger{ background:transparent; color:var(--rose); }
+  .btn.danger:hover{ background:var(--rose-tint); }
+  .btn.small{ padding:4px 9px; font-size:12px; border-radius:6px; }
+  .btn:disabled{ opacity:.5; cursor:not-allowed; }
+
+  .sitetabs{ display:inline-flex; border:1px solid var(--border); border-radius:8px; padding:3px; background:var(--surface); gap:2px; }
+  .sitetabs button{ border:none; background:transparent; padding:6px 14px; border-radius:6px; font-size:13px; font-weight:500; color:var(--ink-soft); cursor:pointer; }
+  .sitetabs button.active{ background:var(--clay); color:#fffaf3; }
+
+  .card{ background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); }
+
+  .toolrow{ display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .toolrow label{ font-size:12.5px; color:var(--ink-soft); margin:0; }
+  .toolrow select, .toolrow input[type="date"], .toolrow input[type="month"]{ width:auto; }
+  .search-box{ flex:1; min-width:160px; max-width:260px; }
+
+  input[type="text"], input[type="date"], input[type="month"], select, textarea{ background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:7px 9px; width:100%; }
+  textarea{ resize:vertical; min-height:64px; }
+  input:focus, select:focus, textarea:focus, button:focus-visible{ outline:2px solid var(--clay); outline-offset:1px; }
+  label{ font-size:12.5px; color:var(--ink-soft); display:block; margin-bottom:4px; }
+  .field{ margin-bottom:14px; }
+  .field-row{ display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .checkbox-row{ display:flex; align-items:center; gap:8px; }
+  .checkbox-row input{ width:auto; }
+
+  .empty{ padding:44px 20px; text-align:center; color:var(--ink-soft); }
+  .empty h3{ color:var(--ink); font-size:16px; margin-bottom:6px; }
+
+  .pill{ display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:99px; font-size:11.5px; font-weight:500; white-space:nowrap; }
+  .pill.green{ background:var(--green-tint); color:var(--green); }
+  .pill.amber{ background:var(--amber-tint); color:var(--amber); }
+  .pill.rose{ background:var(--rose-tint); color:var(--rose); }
+  .pill.idle{ background:var(--surface-sunken); color:var(--ink-soft); }
+  .pill.clay{ background:var(--clay-tint); color:var(--clay-dark); }
+  .casco-chip{ font-family:"IBM Plex Mono"; font-size:11px; color:var(--sage); }
+
+  .table-wrap{ overflow-x:auto; }
+  table{ width:100%; border-collapse:collapse; font-size:13.5px; }
+  th{ text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--sage); font-weight:600; padding:9px 12px; border-bottom:1px solid var(--border); white-space:nowrap; }
+  td{ padding:7px 12px; border-bottom:1px solid var(--border); vertical-align:middle; }
+  tr:last-child td{ border-bottom:none; }
+  tbody tr:hover{ background:var(--surface-sunken); }
+  .name-cell{ font-weight:500; }
+  .muted{ color:var(--ink-soft); }
+
+  .tbl-input{ padding:5px 7px; font-size:13px; min-width:150px; }
+  .tbl-select{ padding:5px 7px; font-size:13px; width:auto; }
+  .asig-cell{ display:flex; gap:6px; flex-wrap:wrap; }
+  .asig-cell.oculto{ display:none; }
+
+  .modal-backdrop{ position:fixed; inset:0; background:rgba(30,24,16,.45); display:flex; align-items:flex-start; justify-content:center; padding:5vh 20px; overflow-y:auto; z-index:50; }
+  .modal{ background:var(--surface); border-radius:14px; border:1px solid var(--border); width:100%; max-width:480px; padding:26px 26px 22px; box-shadow:var(--shadow); }
+  .modal h3{ font-size:19px; margin-bottom:18px; }
+  .modal-actions{ display:flex; justify-content:flex-end; gap:10px; margin-top:20px; padding-top:16px; border-top:1px solid var(--border); }
+
+  .banner{ display:flex; gap:10px; align-items:flex-start; background:var(--amber-tint); color:var(--amber); border:1px solid color-mix(in srgb, var(--amber) 35%, transparent); border-radius:9px; padding:11px 14px; font-size:13px; margin-bottom:18px; }
+
+  .stat-row{ display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:14px; margin-bottom:20px; }
+  .stat{ padding:14px 16px; }
+  .stat .label{ font-size:11.5px; text-transform:uppercase; letter-spacing:.06em; color:var(--sage); }
+  .stat .value{ font-family:"IBM Plex Mono"; font-size:22px; font-weight:600; margin-top:5px; }
+
+  .lists-grid{ display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .list-add{ display:flex; gap:8px; margin-bottom:12px; }
+  .simple-list{ list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:1px; max-height:420px; overflow-y:auto; }
+  .simple-list li{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 4px; border-bottom:1px solid var(--border); font-size:13px; }
+  .simple-list li:last-child{ border-bottom:none; }
+  .simple-list .nm.inactivo{ color:var(--ink-soft); text-decoration:line-through; }
+
+  /* ---- Mapa ---- */
+  .mapa-layout{ display:flex; gap:16px; align-items:flex-start; }
+  .mapa-plan-col{ flex:0 0 50%; min-width:0; }
+  .mapa-detail-col{ flex:1; min-width:0; }
+  .plan-tabs{ display:flex; gap:2px; background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:3px; margin-bottom:10px; }
+  .plan-tabs button{ flex:1; border:none; background:transparent; padding:7px 8px; border-radius:6px; font-size:12.5px; font-weight:500; color:var(--ink-soft); cursor:pointer; }
+  .plan-tabs button.active{ background:var(--clay); color:#fffaf3; }
+  .plan-scroll{ overflow:auto; border-radius:10px; border:1px solid var(--border); background:var(--surface-sunken); max-height:70vh; }
+  .plan-container{ position:relative; display:inline-block; min-width:100%; }
+  .plan-img{ display:block; width:100%; height:auto; }
+  .hs{ position:absolute; border:1.5px solid rgba(255,255,255,.7); border-radius:4px; background:rgba(181,96,47,.28); cursor:pointer; display:flex; align-items:center; justify-content:center; font-family:"IBM Plex Mono"; font-size:9px; font-weight:600; color:#fff; text-shadow:0 1px 2px rgba(0,0,0,.7); }
+  .hs:hover{ background:rgba(181,96,47,.65); border-color:#fff; z-index:2; }
+  .hs.ocupado{ background:rgba(76,122,79,.45); border-color:rgba(76,122,79,.9); }
+  .hs.ocupado:hover{ background:rgba(76,122,79,.75); }
+  .hs.sel{ border-width:2.5px; border-color:#fff; z-index:3; box-shadow:0 0 0 2px var(--clay); }
+  .hs-badge{ position:absolute; top:-6px; right:-6px; min-width:14px; height:14px; border-radius:7px; background:var(--green); border:1.5px solid var(--surface); font-size:8px; font-weight:700; color:#fff; display:flex; align-items:center; justify-content:center; padding:0 3px; }
+  .mapa-toolrow{ display:flex; align-items:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+  .unit-empty{ display:flex; flex-direction:column; align-items:center; justify-content:center; height:100%; min-height:260px; text-align:center; color:var(--ink-soft); gap:6px; padding:24px; }
+  .unit-hd{ display:flex; align-items:flex-start; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .unit-title{ font-size:26px; }
+  .unit-sub{ font-size:12.5px; color:var(--ink-soft); margin-top:2px; }
+  .unit-list{ display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+  .unit-worker{ display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:9px; padding:9px 12px; box-shadow:var(--shadow); }
+  .unit-worker .who{ font-weight:500; font-size:13.5px; }
+  .unit-worker .what{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
+  .addworker-form{ background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; gap:8px; }
+  .ugrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(64px,1fr)); gap:6px; }
+  .ubtn{ position:relative; background:var(--surface-sunken); border:1.5px solid var(--border); color:var(--ink); border-radius:6px; padding:8px 5px; font-family:"IBM Plex Mono"; font-size:11px; font-weight:500; cursor:pointer; text-align:center; }
+  .ubtn:hover{ border-color:var(--clay); background:var(--clay-tint); color:var(--clay-dark); }
+  .ubtn.ocupado{ border-color:var(--green); }
+  .ubadge{ position:absolute; top:-6px; right:-6px; min-width:14px; height:14px; border-radius:7px; background:var(--green); color:#fff; font-size:8px; font-weight:700; display:flex; align-items:center; justify-content:center; padding:0 3px; }
+  .frente-hd{ font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--sage); margin:14px 0 6px; }
+  .frente-hd:first-child{ margin-top:0; }
+  @media (max-width: 900px){ .mapa-layout{ flex-direction:column; } .mapa-plan-col{ flex:0 0 auto; width:100%; } .plan-scroll{ max-height:60vw; } }
+
+  @media (max-width: 760px){
+    .app{ grid-template-columns:1fr; }
+    .sidebar{ flex-direction:row; align-items:center; overflow-x:auto; padding:14px 16px; gap:16px; }
+    .brand{ display:none; }
+    nav{ flex-direction:row; }
+    .sidebar-foot{ display:none; }
+    main{ padding:18px 14px 40px; }
+    .field-row{ grid-template-columns:1fr; }
+    .lists-grid{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <aside class="sidebar">
+    <div class="brand"><div class="eyebrow">Parque Tempisque</div><h1>Asignación de Campo</h1></div>
+    <nav id="nav">
+      <button class="navbtn active" data-tab="asignar"><span class="dot"></span>Asignar</button>
+      <button class="navbtn" data-tab="mapa"><span class="dot"></span>Mapa</button>
+      <button class="navbtn" data-tab="resumen"><span class="dot"></span>Resumen</button>
+      <button class="navbtn" data-tab="colaboradores"><span class="dot"></span>Colaboradores</button>
+      <button class="navbtn" data-tab="listas"><span class="dot"></span>Proyectos / Códigos</button>
+    </nav>
+    <button class="btn secondary" id="btn-exportar-excel" style="margin-top:auto;width:100%;justify-content:center">⬇ Exportar Excel</button>
+    <div class="sidebar-foot" id="connStatus">Conectando…</div>
+  </aside>
+
+  <main>
+    <div id="banner-slot"></div>
+    <section id="view-asignar"></section>
+    <section id="view-mapa" style="display:none"></section>
+    <section id="view-resumen" style="display:none"></section>
+    <section id="view-colaboradores" style="display:none"></section>
+    <section id="view-listas" style="display:none"></section>
+  </main>
+</div>
+
+<div id="modal-slot"></div>
+
+<!-- Firebase (rellena firebase-config.js con los datos de tu proyecto) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
+
+<script>
+(function(){
+  "use strict";
+
+  var SITIOS = ["La Pampa", "Parques"];
+  var CODIGOS_AUSENCIA = [
+    {key:"A", label:"Ausencia"}, {key:"CCSS", label:"Caja (CCSS)"}, {key:"V", label:"Vacaciones"},
+    {key:"PCG", label:"Permiso con goce"}, {key:"PSG", label:"Permiso sin goce"}, {key:"SUS", label:"Suspensión"},
+    {key:"INS", label:"INS"}, {key:"NI", label:"Nuevo ingreso"}, {key:"R", label:"Renunció"}, {key:"D", label:"Despedido"}
+  ];
+
+  // ---- Plano La Pampa / Los Parques: coordenadas de unidades (mismo levantamiento que Check List Laura) ----
+  var PLANO_LP_URL = "img/plano_la_pampa.jpg";
+  var PLANO_LOSP_URL = "img/plano_los_parques.jpg";
+
+  var LP_HOTSPOTS = [
+    {u:"LP501",x:37.6,y:11.5,w:5,h:3},{u:"LP502",x:29,y:16.2,w:5,h:3},
+    {u:"LP503",x:26.4,y:21.8,w:5,h:3},{u:"LP504",x:25.6,y:28,w:5,h:3},
+    {u:"505",x:34.2,y:27.9,w:5,h:3},{u:"506",x:34.1,y:22.8,w:5,h:3},
+    {u:"507",x:39.9,y:17.9,w:5,h:3},{u:"508",x:47,y:22.4,w:5,h:3},
+    {u:"509",x:44.5,y:27.3,w:5,h:3},
+    {u:"601",x:43.4,y:34.9,w:5,h:3},{u:"602",x:34.8,y:34.4,w:5,h:3},
+    {u:"603",x:26.9,y:34.5,w:5,h:3},{u:"604",x:27.1,y:39.7,w:5,h:3},
+    {u:"605",x:26.9,y:45.1,w:5,h:3},{u:"606",x:34.8,y:45.6,w:5,h:3},
+    {u:"607",x:34.8,y:40.1,w:5,h:3},{u:"608",x:46.3,y:40,w:5,h:3},
+    {u:"609",x:45.7,y:45,w:5,h:3},
+    {u:"LP701",x:45.9,y:53,w:5,h:3},{u:"LP702",x:46.8,y:57.9,w:5,h:3},
+    {u:"LP703",x:34.6,y:58.3,w:5,h:3},{u:"LP704",x:37,y:52.6,w:5,h:3},
+    {u:"LP705",x:26.7,y:53.8,w:5,h:3},{u:"LP706",x:26.7,y:58.8,w:5,h:3},
+    {u:"LP707",x:28.7,y:64.8,w:5,h:3},{u:"LP708",x:38.8,y:64.5,w:5,h:3},
+    {u:"709",x:46.1,y:63.5,w:5,h:3},
+    {u:"LP801",x:11.9,y:20.3,w:5,h:3},{u:"LP802",x:13.9,y:27.7,w:5,h:3},
+    {u:"LP901",x:10.6,y:37.4,w:5,h:3},{u:"LP902",x:10.3,y:45.6,w:5,h:3},
+    {u:"1001",x:11.2,y:55.1,w:5,h:3},{u:"1002",x:12,y:63.2,w:5,h:3},
+    {u:"1003",x:15.6,y:70.4,w:5,h:3},
+    {u:"1101",x:29.2,y:74.4,w:5,h:3},{u:"1102",x:39.5,y:74.2,w:5,h:3},
+    {u:"1103",x:49.9,y:73.5,w:5,h:3},
+    {u:"1201",x:68.9,y:78.3,w:5,h:3},{u:"1202",x:77.9,y:84.5,w:5,h:3},
+    {u:"1203",x:86.1,y:90.3,w:5,h:3},{u:"1204",x:76.7,y:72,w:5,h:3},
+    {u:"1205",x:82.4,y:76.3,w:5,h:3},{u:"1206",x:87.2,y:80,w:5,h:3},
+    {u:"1207",x:92.8,y:84.3,w:5,h:3}
+  ];
+
+  var LOSP_HOTSPOTS = [
+    {u:"101",x:78.8,y:21.4,w:4,h:2.5},{u:"102",x:76.3,y:21.3,w:4,h:2.5},
+    {u:"103",x:73.8,y:21.4,w:4,h:2.5},{u:"104",x:71.6,y:21.4,w:4,h:2.5},
+    {u:"105",x:67.5,y:24.4,w:4,h:2.5},{u:"106",x:69.3,y:27.5,w:4,h:2.5},
+    {u:"107",x:70.5,y:29.2,w:4,h:2.5},{u:"108",x:71.5,y:30.7,w:4,h:2.5},
+    {u:"109",x:72.4,y:32.6,w:4,h:2.5},
+    {u:"APP 1",x:88,y:21.5,w:4,h:2.5},
+    {u:"201",x:54.2,y:31.2,w:4,h:2.5},{u:"202",x:56.4,y:30.3,w:4,h:2.5},
+    {u:"203",x:58.4,y:29.6,w:4,h:2.5},{u:"204",x:61.2,y:28.8,w:4,h:2.5},
+    {u:"205",x:63.9,y:31.6,w:4,h:2.5},{u:"206",x:64.8,y:33.4,w:4,h:2.5},
+    {u:"207",x:66.1,y:35.2,w:4,h:2.5},{u:"208",x:62.3,y:37.4,w:4,h:2.5},
+    {u:"209",x:60,y:38.3,w:4,h:2.5},{u:"210",x:57.5,y:39.1,w:4,h:2.5},
+    {u:"213",x:53.2,y:40.9,w:4,h:2.5},{u:"214",x:46.4,y:43.2,w:4,h:2.5},
+    {u:"215",x:43.2,y:38.4,w:4,h:2.5},
+    {u:"Ap-Ver-2",x:46.4,y:29.2,w:4,h:2.5},
+    {u:"APP 2",x:84.2,y:30.6,w:4,h:2.5},{u:"APP 3",x:82.3,y:42.3,w:4,h:2.5},
+    {u:"APP 4",x:83.7,y:50.8,w:4,h:2.5},{u:"APP 5",x:89.2,y:60.1,w:4,h:2.5},
+    {u:"301",x:69.9,y:42.1,w:4,h:2.5},{u:"302",x:70.3,y:44.9,w:4,h:2.5},
+    {u:"303",x:71.2,y:46.8,w:4,h:2.5},{u:"304",x:72.3,y:48.1,w:4,h:2.5},
+    {u:"305",x:73.5,y:50,w:4,h:2.5},{u:"306",x:75.2,y:52.6,w:4,h:2.5},
+    {u:"307",x:76.6,y:54.3,w:4,h:2.5},
+    {u:"401",x:61,y:44.9,w:4,h:2.5},{u:"402",x:63.3,y:48.1,w:4,h:2.5},
+    {u:"403",x:64.5,y:49.7,w:4,h:2.5},{u:"404",x:66.2,y:52,w:4,h:2.5},
+    {u:"405",x:67.6,y:53.7,w:4,h:2.5},{u:"406",x:69.2,y:55.8,w:4,h:2.5},
+    {u:"407",x:64.6,y:59.2,w:4,h:2.5},{u:"408",x:62.2,y:59.7,w:4,h:2.5},
+    {u:"409",x:60.1,y:60.1,w:4,h:2.5},{u:"410",x:57.9,y:60.7,w:4,h:2.5},
+    {u:"411",x:54.4,y:55.3,w:4,h:2.5},{u:"412",x:51.2,y:50,w:4,h:2.5},
+    {u:"413",x:56.6,y:47.1,w:4,h:2.5},{u:"414",x:58.6,y:46,w:4,h:2.5},
+    {u:"501",x:81.7,y:61.3,w:4,h:2.5},{u:"502",x:80,y:62.4,w:4,h:2.5},
+    {u:"503",x:75.3,y:66.3,w:4,h:2.5},{u:"504",x:77,y:68,w:4,h:2.5},
+    {u:"701",x:48.7,y:73.1,w:4,h:2.5},{u:"702",x:52.3,y:77.5,w:4,h:2.5},
+    {u:"703",x:54.5,y:80,w:4,h:2.5},{u:"704",x:55.7,y:81.5,w:4,h:2.5},
+    {u:"705",x:41.3,y:84.3,w:4,h:2.5},{u:"706",x:40,y:82.7,w:4,h:2.5},
+    {u:"707",x:38.7,y:81.1,w:4,h:2.5},{u:"708",x:37.4,y:79.4,w:4,h:2.5},
+    {u:"801",x:27.8,y:57.5,w:4,h:2.5},{u:"802",x:30.1,y:56.4,w:4,h:2.5},
+    {u:"803",x:32.5,y:55.4,w:4,h:2.5},{u:"804",x:38.6,y:53.1,w:4,h:2.5},
+    {u:"805",x:42.2,y:58.4,w:4,h:2.5},{u:"806",x:43,y:63.3,w:4,h:2.5},
+    {u:"807",x:39.5,y:65.9,w:4,h:2.5},{u:"808",x:37.4,y:67,w:4,h:2.5},
+    {u:"809",x:35.6,y:67.9,w:4,h:2.5},{u:"810",x:30.4,y:69.4,w:4,h:2.5},
+    {u:"811",x:29.2,y:67.7,w:4,h:2.5},{u:"812",x:28,y:66.2,w:4,h:2.5},
+    {u:"813",x:26.7,y:64.7,w:4,h:2.5},{u:"814",x:25.3,y:62.9,w:4,h:2.5},
+    {u:"816",x:23.6,y:61.1,w:4,h:2.5},
+    {u:"901",x:23.8,y:38.3,w:4,h:2.5},{u:"902",x:26,y:37.5,w:4,h:2.5},
+    {u:"903",x:28.2,y:36.5,w:4,h:2.5},{u:"904",x:32,y:40,w:4,h:2.5},
+    {u:"905",x:33.2,y:41.7,w:4,h:2.5},{u:"906",x:31.8,y:47.5,w:4,h:2.5},
+    {u:"907",x:28.1,y:50.3,w:4,h:2.5},{u:"908",x:25.8,y:51.6,w:4,h:2.5},
+    {u:"909",x:23.4,y:52.6,w:4,h:2.5},
+    {u:"917",x:18.6,y:54.7,w:4,h:2.5},{u:"918",x:17.3,y:53.1,w:4,h:2.5},
+    {u:"919",x:16,y:51.6,w:4,h:2.5},
+    {u:"Club House",x:63.2,y:70.3,w:6,h:2.5},
+    {u:"AP-Ver-9",x:15.3,y:42.2,w:4,h:2.5},
+    {u:"AP-Ver-7",x:51.7,y:88.1,w:4,h:2.5},
+    {u:"AP-Ver-5",x:87.5,y:70.5,w:4,h:2.5}
+  ];
+
+  var ALL_LOSP = {'101':1,'102':1,'103':1,'104':1,'105':1,'106':1,'107':1,'108':1,'109':1,
+    '121':1,'122':1,'131':1,'132':1,'123':1,'124':1,'133':1,'134':1,'APP 1':1,
+    '201':1,'202':1,'203':1,'204':1,'205':1,'206':1,'207':1,'208':1,'209':1,'210':1,'213':1,'214':1,'215':1,
+    '211':1,'212':1,'216':1,'217':1,'218':1,'219':1,'221':1,'222':1,'223':1,'224':1,'225':1,'226':1,'231':1,'232':1,'233':1,'234':1,'235':1,'236':1,
+    'Ap-Ver-2':1,'APP 2':1,'APP 3':1,'APP 4':1,'APP 5':1,
+    '301':1,'302':1,'303':1,'304':1,'305':1,'306':1,'307':1,
+    '321':1,'322':1,'331':1,'332':1,'323':1,'324':1,'333':1,'334':1,
+    '401':1,'402':1,'403':1,'404':1,'405':1,'406':1,'407':1,'408':1,'409':1,'410':1,'411':1,'412':1,'413':1,'414':1,
+    '501':1,'502':1,'503':1,'504':1,
+    '521':1,'522':1,'531':1,'532':1,
+    '611':1,'612':1,'613':1,'614':1,'615':1,'616':1,'621':1,'622':1,'623':1,'624':1,'625':1,'626':1,'631':1,'632':1,'633':1,'634':1,'635':1,'636':1,
+    '701':1,'702':1,'703':1,'704':1,'705':1,'706':1,'707':1,'708':1,
+    '711':1,'712':1,'713':1,'714':1,'715':1,'716':1,'721':1,'722':1,'723':1,'724':1,'725':1,'726':1,'731':1,'732':1,'733':1,'734':1,'735':1,'736':1,
+    '801':1,'802':1,'803':1,'804':1,'805':1,'806':1,'807':1,'808':1,'809':1,'810':1,'811':1,'812':1,'813':1,'814':1,'816':1,
+    '901':1,'902':1,'903':1,'904':1,'905':1,'906':1,'907':1,'908':1,'909':1,'917':1,'918':1,'919':1,
+    '911':1,'912':1,'913':1,'914':1,'915':1,'916':1,'921':1,'922':1,'923':1,'924':1,'925':1,'926':1,'931':1,'932':1,'933':1,'934':1,'935':1,'936':1,
+    'Club House':1,'AP-Ver-9':1,'AP-Ver-7':1,'AP-Ver-5':1};
+
+  var BUILDING_UNITS = {
+    'Ap-Ver-2':['211','212','216','217','218','219','221','222','223','224','225','226','231','232','233','234','235','236'],
+    'AP-Ver-5':['611','612','613','614','615','616','621','622','623','624','625','626','631','632','633','634','635','636'],
+    'AP-Ver-7':['711','712','713','714','715','716','721','722','723','724','725','726','731','732','733','734','735','736'],
+    'AP-Ver-9':['911','912','913','914','915','916','921','922','923','924','925','926','931','932','933','934','935','936'],
+    'APP 1':['121','122','131','132'], 'APP 2':['123','124','133','134'],
+    'APP 3':['321','322','331','332'], 'APP 4':['323','324','333','334'], 'APP 5':['521','522','531','532']
+  };
+
+  var UNIDAD_GROUPS = [
+    {label:'La Pampa', units:['LP501','LP502','LP503','LP504','505','506','507','508','509','601','602','603','604','605','606','607','608','609','701','702','703','704','705','706','707','708','709','801','802','901','902','1001','1002','1003','1101','1102','1103','1201','1202','1203','1204','1205','1206','1207']},
+    {label:'Los Parques — Bloque 100', units:['101','102','103','104','105','106','107','108','109']},
+    {label:'Los Parques — Bloque 200', units:['201','202','203','204','205','206','207','208','209','210','213','214','215']},
+    {label:'Los Parques — Edif. 0 (AP-VER)', units:['211','212','216','217','218','219','221','222','223','224','225','226','231','232','233','234','235','236']},
+    {label:'Los Parques — Edif. 6 (AP-VER)', units:['611','612','613','614','615','616','621','622','623','624','625','626','631','632','633','634','635','636']},
+    {label:'Los Parques — Edif. 7 (AP-VER)', units:['711','712','713','714','715','716','721','722','723','724','725','726','731','732','733','734','735','736']},
+    {label:'Los Parques — Edif. 9 (AP-VER)', units:['911','912','913','914','915','916','921','922','923','924','925','926','931','932','933','934','935','936']},
+    {label:'Los Parques — APP Cluster 1', units:['121','122','131','132']},
+    {label:'Los Parques — APP Cluster 2', units:['123','124','133','134']},
+    {label:'Los Parques — APP Cluster 3', units:['321','322','331','332']},
+    {label:'Los Parques — APP Cluster 4', units:['323','324','333','334']},
+    {label:'Los Parques — APP Cluster 5', units:['521','522','531','532']},
+    {label:'Los Parques — Bloque 300', units:['301','302','303','304','305','306','307']},
+    {label:'Los Parques — Bloque 400', units:['401','402','403','404','405','406','407','408','409','410','411','412','413','414']},
+    {label:'Los Parques — Bloque 500', units:['501','502','503','504']},
+    {label:'Los Parques — Bloque 700', units:['701','702','703','704','705','706','707','708']},
+    {label:'Los Parques — Bloque 800', units:['801','802','803','804','805','806','807','808','809','810','811','812','813','814','816']},
+    {label:'Los Parques — Bloque 900', units:['901','902','903','904','905','906','907','908','909','917','918','919']},
+    {label:'Los Parques — Especiales', units:['Club House']}
+  ];
+
+  var state = {
+    tab: "asignar",
+    sitioActivo: "La Pampa",
+    colaboradores: [],
+    proyectos: [],
+    codigosPresupuestarios: [],
+    asignacionesDia: {},
+    fecha: todayStr(),
+    mapaSitio: "lp",
+    mapaUnidad: null,
+    mapaColabFiltro: "",
+    filtroNombre: "",
+    resumenDesde: quincenaInicio(),
+    resumenHasta: quincenaFin(),
+    asignacionesResumen: {},
+    dbReady: null
+  };
+  var db = null;
+
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+  function todayStr(){ var d=new Date(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function pad(n){ return n<10?"0"+n:""+n; }
+  function fmtDate(s){ if(!s) return "—"; var p=s.split("-"); return p[2]+"/"+p[1]; }
+  function quincenaInicio(){ var d=new Date(); var dia = d.getDate()<=15 ? 1 : 16; return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(dia); }
+  function quincenaFin(){ var d=new Date(); var fin = d.getDate()<=15 ? 15 : new Date(d.getFullYear(), d.getMonth()+1, 0).getDate(); return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(fin); }
+  function codigoLabel(k){ var c = CODIGOS_AUSENCIA.find(function(x){ return x.key===k; }); return c ? c.label : k; }
+  function proyectoNombre(id){ var p = state.proyectos.find(function(x){ return x.id===id; }); return p ? p.nombre : ""; }
+  function codigosParaProyecto(proyectoId){
+    var specific = state.codigosPresupuestarios.filter(function(c){ return c.alcance===proyectoId && c.activo!==false; });
+    var list = specific.length ? specific : state.codigosPresupuestarios.filter(function(c){ return c.alcance==="default" && c.activo!==false; });
+    return list.slice().sort(function(a,b){ return (a.descripcion||"").localeCompare(b.descripcion||""); });
+  }
+  function proyectoOptionsHtml(selectedId){
+    var proyectosActivos = state.proyectos.filter(function(p){ return p.activo!==false; }).slice().sort(function(a,b){ return a.nombre.localeCompare(b.nombre); });
+    return '<option value="">— sin asignar —</option>' + proyectosActivos.map(function(p){
+      return '<option value="'+esc(p.id)+'" '+(p.id===selectedId?"selected":"")+'>'+esc(p.nombre)+'</option>';
+    }).join("");
+  }
+  function actividadOptionsHtml(proyectoId, selectedCodigo){
+    if(!proyectoId) return '<option value="">— elige un proyecto primero —</option>';
+    var list = codigosParaProyecto(proyectoId);
+    if(!list.length) return '<option value="">— sin códigos disponibles —</option>';
+    return '<option value="">— seleccionar —</option>' + list.map(function(c){
+      return '<option value="'+esc(c.id)+'" '+(c.id===selectedCodigo?"selected":"")+'>'+esc(c.codigo)+' — '+esc(c.descripcion)+'</option>';
+    }).join("");
+  }
+
+  function boot(){
+    if(typeof FIREBASE_CONFIG === "undefined" || !FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.indexOf("PEGA_")===0){
+      onDbUnavailable("Falta configurar Firebase: edita firebase-config.js con los datos de tu proyecto (ver README).");
+      return;
+    }
+    try{
+      firebase.initializeApp(FIREBASE_CONFIG);
+      db = firebase.firestore();
+      state.dbReady = true;
+      document.getElementById("connStatus").textContent = "Conectado · datos en vivo";
+      subscribeColaboradores();
+      subscribeProyectos();
+      subscribeCodigosPresupuestarios();
+      subscribeAsignacionesDia();
+      subscribeAsignacionesResumen();
+    }catch(e){
+      onDbUnavailable("No se pudo conectar a Firebase: "+e.message);
+    }
+  }
+  function onDbUnavailable(msg){
+    state.dbReady = false;
+    document.getElementById("connStatus").textContent = "Sin conexión a datos";
+    window.__dbErrorMsg = msg || "";
+    renderAll();
+  }
+  function renderBanner(){
+    document.getElementById("banner-slot").innerHTML = (state.dbReady === false)
+      ? '<div class="banner">⚠️ '+esc(window.__dbErrorMsg || "No se pudo conectar al almacenamiento compartido.")+'</div>'
+      : "";
+  }
+
+  function subscribeColaboradores(){
+    db.collection("colaboradores").orderBy("nombre","asc").onSnapshot(function(snap){
+      state.colaboradores = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+      renderAll();
+    }, function(e){ console.error(e); });
+  }
+  function subscribeProyectos(){
+    db.collection("proyectos").orderBy("nombre","asc").onSnapshot(function(snap){
+      state.proyectos = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+      renderAll();
+    }, function(e){ console.error(e); });
+  }
+  function subscribeCodigosPresupuestarios(){
+    db.collection("codigos_presupuestarios").onSnapshot(function(snap){
+      state.codigosPresupuestarios = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+      renderAll();
+    }, function(e){ console.error(e); });
+  }
+  function subscribeAsignacionesDia(){
+    db.collection("asignaciones").where("fecha","==",state.fecha).onSnapshot(function(snap){
+      var byCol = {};
+      snap.docs.forEach(function(d){ var data = d.data(); byCol[data.colaboradorId] = data; });
+      state.asignacionesDia[state.fecha] = byCol;
+      if(state.tab==="asignar") renderAsignar();
+      if(state.tab==="mapa") renderMapa();
+    }, function(e){ console.error(e); });
+  }
+  function subscribeAsignacionesResumen(){
+    db.collection("asignaciones").where("fecha",">=",state.resumenDesde).where("fecha","<=",state.resumenHasta).onSnapshot(function(snap){
+      var byCol = {};
+      snap.docs.forEach(function(d){ var data = d.data(); (byCol[data.colaboradorId]=byCol[data.colaboradorId]||[]).push(data); });
+      state.asignacionesResumen = byCol;
+      if(state.tab==="resumen") renderResumen();
+    }, function(e){ console.error(e); });
+  }
+
+  document.getElementById("nav").addEventListener("click", function(e){
+    var btn = e.target.closest(".navbtn");
+    if(!btn) return;
+    state.tab = btn.getAttribute("data-tab");
+    document.querySelectorAll(".navbtn").forEach(function(b){ b.classList.toggle("active", b===btn); });
+    ["asignar","mapa","resumen","colaboradores","listas"].forEach(function(t){
+      document.getElementById("view-"+t).style.display = (t===state.tab) ? "" : "none";
+    });
+    renderAll();
+  });
+
+  function renderAll(){
+    renderBanner();
+    renderAsignar();
+    renderMapa();
+    renderResumen();
+    renderColaboradores();
+    renderListas();
+  }
+
+  // =========================================================
+  // EXPORTAR EXCEL
+  // =========================================================
+  function styleHeaderRow(row){
+    row.height = 20;
+    row.eachCell(function(cell){
+      cell.fill = {type:"pattern", pattern:"solid", fgColor:{argb:"FF7E3F1C"}};
+      cell.font = {bold:true, color:{argb:"FFFFFFFF"}, size:10, name:"Calibri"};
+      cell.alignment = {horizontal:"center", vertical:"middle"};
+    });
+  }
+  function styleDataRows(ws){
+    ws.eachRow({includeEmpty:false}, function(row, rowNumber){
+      if(rowNumber===1) return;
+      var bg = rowNumber%2===0 ? "FFF3EDE2" : "FFFFFFFF";
+      row.eachCell({includeEmpty:true}, function(cell){
+        cell.fill = {type:"pattern", pattern:"solid", fgColor:{argb:bg}};
+        cell.font = cell.font && cell.font.bold ? cell.font : {size:10, name:"Calibri", color:{argb:"FF2C2620"}};
+        cell.alignment = {vertical:"middle"};
+        cell.border = {bottom:{style:"hair", color:{argb:"FFDDD0AF"}}};
+      });
+    });
+  }
+  function colaboradorNombrePorCasco(casco){
+    var c = state.colaboradores.find(function(x){ return x.casco===casco; });
+    return c ? c.nombre : casco;
+  }
+
+  async function exportarExcel(){
+    var btn = document.getElementById("btn-exportar-excel");
+    if(state.dbReady===false){ alert("Sin conexión al almacenamiento compartido; no se puede exportar."); return; }
+    var textoOriginal = btn.textContent;
+    btn.textContent = "Generando…"; btn.disabled = true;
+    try{
+      var snap = await db.collection("asignaciones").get();
+      var asignaciones = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
+
+      var wb = new ExcelJS.Workbook();
+      wb.creator = "Asignación de Campo PT";
+      wb.created = new Date();
+
+      var wsA = wb.addWorksheet("Asignaciones");
+      wsA.columns = [
+        {header:"Fecha", key:"fecha", width:12}, {header:"Casco", key:"casco", width:9},
+        {header:"Colaborador", key:"nombre", width:32}, {header:"Ocupación", key:"ocupacion", width:20},
+        {header:"Sitio", key:"sitio", width:11}, {header:"Casa/Unidad", key:"unidad", width:12},
+        {header:"Tipo", key:"tipo", width:11}, {header:"Proyecto", key:"proyecto", width:34},
+        {header:"Código actividad", key:"actCod", width:16}, {header:"Actividad", key:"actDesc", width:34},
+        {header:"Código ausencia", key:"ausCod", width:14}, {header:"Detalle ausencia", key:"ausDesc", width:20},
+        {header:"Nota", key:"nota", width:28}
+      ];
+      styleHeaderRow(wsA.getRow(1));
+      asignaciones.slice().sort(function(a,b){
+        if(a.fecha!==b.fecha) return a.fecha < b.fecha ? 1 : -1;
+        return (colaboradorNombrePorCasco(a.colaboradorId)||"").localeCompare(colaboradorNombrePorCasco(b.colaboradorId)||"");
+      }).forEach(function(a){
+        var c = state.colaboradores.find(function(x){ return x.casco===a.colaboradorId; });
+        wsA.addRow({
+          fecha: a.fecha||"", casco: a.colaboradorId||"", nombre: c?c.nombre:"", ocupacion: c?(c.ocupacion||""):"",
+          sitio: a.sitio||"", unidad: a.unidad ? displayUnidad(a.unidad) : "",
+          tipo: a.tipo==="ausencia" ? "Ausencia" : "Trabajo",
+          proyecto: a.proyecto||"", actCod: a.actividadCodigo||"", actDesc: a.actividad||"",
+          ausCod: a.codigoAusencia||"", ausDesc: a.codigoAusencia ? codigoLabel(a.codigoAusencia) : "",
+          nota: a.nota||""
+        });
+      });
+      wsA.autoFilter = "A1:M1";
+      wsA.views = [{state:"frozen", ySplit:1}];
+      styleDataRows(wsA);
+
+      var wsC = wb.addWorksheet("Colaboradores");
+      wsC.columns = [
+        {header:"Casco", key:"casco", width:9}, {header:"Nombre", key:"nombre", width:32},
+        {header:"Ocupación", key:"ocupacion", width:20},
+        {header:"Sitio", key:"sitio", width:12}, {header:"Activo", key:"activo", width:9}
+      ];
+      styleHeaderRow(wsC.getRow(1));
+      state.colaboradores.slice().sort(function(a,b){ return a.nombre.localeCompare(b.nombre); }).forEach(function(c){
+        wsC.addRow({casco:c.casco, nombre:c.nombre, ocupacion:c.ocupacion||"", sitio:c.sitio||"", activo: c.activo!==false?"Sí":"No"});
+      });
+      wsC.views = [{state:"frozen", ySplit:1}];
+      styleDataRows(wsC);
+
+      var wsP = wb.addWorksheet("Proyectos");
+      wsP.columns = [
+        {header:"Nombre", key:"nombre", width:38}, {header:"Código proyecto", key:"codigoProyecto", width:16},
+        {header:"Activo", key:"activo", width:9}
+      ];
+      styleHeaderRow(wsP.getRow(1));
+      state.proyectos.slice().sort(function(a,b){ return a.nombre.localeCompare(b.nombre); }).forEach(function(p){
+        wsP.addRow({nombre:p.nombre, codigoProyecto:p.codigoProyecto||"", activo: p.activo!==false?"Sí":"No"});
+      });
+      wsP.views = [{state:"frozen", ySplit:1}];
+      styleDataRows(wsP);
+
+      var wsK = wb.addWorksheet("Codigos presupuestarios");
+      wsK.columns = [
+        {header:"Código", key:"codigo", width:16}, {header:"Descripción", key:"descripcion", width:42},
+        {header:"Categoría", key:"categoria", width:18}, {header:"Alcance", key:"alcance", width:30},
+        {header:"Activo", key:"activo", width:9}
+      ];
+      styleHeaderRow(wsK.getRow(1));
+      state.codigosPresupuestarios.slice().sort(function(a,b){ return (a.codigo||"").localeCompare(b.codigo||""); }).forEach(function(k){
+        wsK.addRow({
+          codigo:k.codigo, descripcion:k.descripcion, categoria:k.categoria||"",
+          alcance: k.alcance==="default" ? "Por defecto" : (proyectoNombre(k.alcance)||k.alcance),
+          activo: k.activo!==false?"Sí":"No"
+        });
+      });
+      wsK.views = [{state:"frozen", ySplit:1}];
+      styleDataRows(wsK);
+
+      var porColab = {};
+      asignaciones.forEach(function(a){
+        var key = a.colaboradorId;
+        if(!porColab[key]) porColab[key] = {dias:0, ausencias:0, porCodigo:{}};
+        if(a.tipo==="ausencia"){
+          porColab[key].ausencias++;
+          var k = a.codigoAusencia||"?";
+          porColab[key].porCodigo[k] = (porColab[key].porCodigo[k]||0)+1;
+        } else if(a.tipo==="trabajo"){
+          porColab[key].dias++;
+        }
+      });
+      var wsR = wb.addWorksheet("Resumen por colaborador");
+      wsR.columns = [
+        {header:"Casco", key:"casco", width:9}, {header:"Colaborador", key:"nombre", width:32},
+        {header:"Días trabajados", key:"dias", width:16}, {header:"Ausencias", key:"ausencias", width:12},
+        {header:"Detalle ausencias", key:"detalle", width:40}
+      ];
+      styleHeaderRow(wsR.getRow(1));
+      Object.keys(porColab).map(function(casco){
+        var c = state.colaboradores.find(function(x){ return x.casco===casco; });
+        return {casco:casco, nombre: c?c.nombre:casco, datos:porColab[casco]};
+      }).sort(function(a,b){ return a.nombre.localeCompare(b.nombre); }).forEach(function(item){
+        var detalle = Object.keys(item.datos.porCodigo).map(function(k){ return codigoLabel(k)+": "+item.datos.porCodigo[k]; }).join(", ");
+        wsR.addRow({casco:item.casco, nombre:item.nombre, dias:item.datos.dias, ausencias:item.datos.ausencias, detalle:detalle});
+      });
+      wsR.views = [{state:"frozen", ySplit:1}];
+      styleDataRows(wsR);
+
+      var buffer = await wb.xlsx.writeBuffer();
+      var blob = new Blob([buffer], {type:"application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"});
+      var url = URL.createObjectURL(blob);
+      var a2 = document.createElement("a");
+      a2.href = url; a2.download = "Asignacion_Campo_PT_"+todayStr()+".xlsx";
+      document.body.appendChild(a2); a2.click(); document.body.removeChild(a2);
+      setTimeout(function(){ URL.revokeObjectURL(url); }, 4000);
+    }catch(e){
+      console.error(e);
+      alert("Error al exportar: "+e.message);
+    } finally {
+      btn.textContent = textoOriginal; btn.disabled = false;
+    }
+  }
+  document.getElementById("btn-exportar-excel").addEventListener("click", exportarExcel);
+
+  function siteTabsHtml(){
+    return '<div class="sitetabs">' + SITIOS.map(function(s){
+      return '<button data-sitio="'+esc(s)+'" class="'+(state.sitioActivo===s?"active":"")+'">'+esc(s)+'</button>';
+    }).join("") + '</div>';
+  }
+  function bindSiteTabs(container, onChange){
+    container.querySelectorAll(".sitetabs button").forEach(function(b){
+      b.addEventListener("click", function(){
+        state.sitioActivo = b.getAttribute("data-sitio");
+        onChange();
+      });
+    });
+  }
+
+  // =========================================================
+  // ASIGNAR
+  // =========================================================
+  function renderAsignar(){
+    var el = document.getElementById("view-asignar");
+    var registros = state.asignacionesDia[state.fecha] || {};
+    var filtro = state.filtroNombre.toLowerCase();
+    var colabs = state.colaboradores.filter(function(c){
+      return c.activo!==false && (c.sitio||"La Pampa")===state.sitioActivo && (!filtro || c.nombre.toLowerCase().indexOf(filtro)>=0);
+    });
+
+    var codigoOpts = CODIGOS_AUSENCIA.map(function(c){ return '<option value="'+c.key+'">'+c.key+' — '+c.label+'</option>'; }).join("");
+
+    var rows = colabs.map(function(c){
+      var r = registros[c.casco] || {};
+      var esAusencia = r.tipo === "ausencia";
+      var proyectoId = r.proyectoId || "";
+      return '<tr data-casco="'+esc(c.casco)+'">'+
+        '<td class="name-cell">'+esc(c.nombre)+' <span class="casco-chip">#'+esc(c.casco)+'</span>'+(c.ocupacion?'<div class="muted" style="font-size:11.5px">'+esc(c.ocupacion)+'</div>':'')+'</td>'+
+        '<td><select class="tbl-select tipo-sel">'+
+          '<option value="trabajo" '+(!esAusencia?"selected":"")+'>Trabajo</option>'+
+          '<option value="ausencia" '+(esAusencia?"selected":"")+'>Ausencia</option>'+
+        '</select></td>'+
+        '<td><div class="asig-cell trabajo-cell '+(esAusencia?"oculto":"")+'">'+
+          '<select class="tbl-select proyecto-sel" style="min-width:170px">'+proyectoOptionsHtml(proyectoId)+'</select>'+
+          '<select class="tbl-select actividad-sel" style="min-width:220px">'+actividadOptionsHtml(proyectoId, r.actividadCodigoId||"")+'</select>'+
+        '</div>'+
+        '<div class="asig-cell ausencia-cell '+(esAusencia?"":"oculto")+'">'+
+          '<select class="tbl-select codigo-sel">'+codigoOpts+'</select>'+
+        '</div></td>'+
+        '<td><input type="text" class="tbl-input nota-in" placeholder="Nota" value="'+esc(r.nota||"")+'" style="min-width:110px"></td>'+
+      '</tr>';
+    }).join("");
+
+    el.innerHTML =
+      '<div class="topbar"><div><h2>Asignar actividad diaria</h2><div class="sub">Proyecto y actividad de cada colaborador para el día</div></div></div>'+
+      '<div class="toolrow">'+siteTabsHtml()+
+        '<input type="date" id="fecha-asignar" value="'+state.fecha+'">'+
+        '<input type="text" class="search-box" id="buscar-colab" placeholder="Buscar colaborador…" value="'+esc(state.filtroNombre)+'">'+
+      '</div>'+
+      (state.colaboradores.length===0 ?
+        '<div class="card empty"><h3>Aún no hay colaboradores</h3><p>Impórtalos o agrégalos en la pestaña Colaboradores.</p></div>' :
+       colabs.length===0 ?
+        '<div class="card empty"><h3>Sin colaboradores para este filtro</h3><p>Cambia el sitio, la búsqueda, o revisa que haya colaboradores activos en "'+esc(state.sitioActivo)+'".</p></div>' :
+        '<div class="card table-wrap"><table><thead><tr><th>Colaborador</th><th>Tipo</th><th>Asignación</th><th>Nota</th></tr></thead><tbody>'+rows+'</tbody></table></div>');
+
+    document.getElementById("fecha-asignar").addEventListener("change", function(e){
+      state.fecha = e.target.value || todayStr();
+      subscribeAsignacionesDia();
+      renderAsignar();
+    });
+    document.getElementById("buscar-colab").addEventListener("input", function(e){
+      state.filtroNombre = e.target.value;
+      renderAsignar();
+    });
+    bindSiteTabs(el, renderAsignar);
+
+    el.querySelectorAll("tbody tr").forEach(function(tr){
+      var casco = tr.getAttribute("data-casco");
+      var tipoSel = tr.querySelector(".tipo-sel");
+      var trabajoCell = tr.querySelector(".trabajo-cell");
+      var ausenciaCell = tr.querySelector(".ausencia-cell");
+      var proyectoSel = tr.querySelector(".proyecto-sel");
+      var actividadSel = tr.querySelector(".actividad-sel");
+      var save = function(){ saveAsignacion(casco, tr); };
+
+      tipoSel.addEventListener("change", function(){
+        var esAus = tipoSel.value === "ausencia";
+        trabajoCell.classList.toggle("oculto", esAus);
+        ausenciaCell.classList.toggle("oculto", !esAus);
+        save();
+      });
+      proyectoSel.addEventListener("change", function(){
+        actividadSel.innerHTML = actividadOptionsHtml(proyectoSel.value, "");
+        save();
+      });
+      tr.querySelectorAll("input, select").forEach(function(inp){ inp.addEventListener("change", save); });
+    });
+  }
+
+  function saveAsignacion(casco, tr){
+    if(state.dbReady===false) return;
+    var tipo = tr.querySelector(".tipo-sel").value;
+    var proyectoId = tr.querySelector(".proyecto-sel").value;
+    var actividadId = tr.querySelector(".actividad-sel").value;
+    var codigoInfo = state.codigosPresupuestarios.find(function(x){ return x.id===actividadId; });
+    var existente = (state.asignacionesDia[state.fecha] || {})[casco] || {};
+    var data = {
+      colaboradorId: casco,
+      fecha: state.fecha,
+      sitio: state.sitioActivo,
+      tipo: tipo,
+      unidad: tipo==="trabajo" ? (existente.unidad || "") : "",
+      proyectoId: tipo==="trabajo" ? proyectoId : "",
+      proyecto: tipo==="trabajo" ? proyectoNombre(proyectoId) : "",
+      actividadCodigoId: tipo==="trabajo" ? actividadId : "",
+      actividadCodigo: tipo==="trabajo" && codigoInfo ? codigoInfo.codigo : "",
+      actividad: tipo==="trabajo" && codigoInfo ? codigoInfo.descripcion : "",
+      codigoAusencia: tipo==="ausencia" ? tr.querySelector(".codigo-sel").value : "",
+      nota: tr.querySelector(".nota-in").value.trim()
+    };
+    db.collection("asignaciones").doc(casco+"__"+state.fecha).set(data)
+      .catch(function(err){ alert("No se pudo guardar: "+err.message); });
+  }
+
+  // =========================================================
+  // MAPA (asignación por casa/unidad — La Pampa y Los Parques)
+  // =========================================================
+  function displayUnidad(u){ return u.indexOf("LP")===0 ? u.slice(2) : u; }
+  function sugerirProyectoPorUnidad(unidad){
+    var directo = state.proyectos.find(function(p){ return p.nombre.toLowerCase()===unidad.toLowerCase(); });
+    if(directo) return directo.id;
+    var numero = displayUnidad(unidad);
+    if(!/^[0-9]+$/.test(numero)) return "";
+    var match = state.proyectos.find(function(p){
+      var tokens = p.nombre.split(/[^0-9A-Za-z]+/);
+      return tokens.indexOf(numero) >= 0;
+    });
+    return match ? match.id : "";
+  }
+  function asignacionesPorUnidad(){
+    var registros = state.asignacionesDia[state.fecha] || {};
+    var porUnidad = {};
+    Object.keys(registros).forEach(function(casco){
+      var r = registros[casco];
+      if(!r.unidad) return;
+      (porUnidad[r.unidad] = porUnidad[r.unidad] || []).push(Object.assign({casco:casco}, r));
+    });
+    return porUnidad;
+  }
+
+  function renderMapa(){
+    var el = document.getElementById("view-mapa");
+    var porUnidad = asignacionesPorUnidad();
+    var hotspots = state.mapaSitio==="lp" ? LP_HOTSPOTS : LOSP_HOTSPOTS;
+    var planUrl = state.mapaSitio==="lp" ? PLANO_LP_URL : PLANO_LOSP_URL;
+
+    var hsHtml = hotspots.map(function(hs){
+      var ocupado = (porUnidad[hs.u]||[]).length;
+      var cls = "hs" + (ocupado?" ocupado":"") + (state.mapaUnidad===hs.u?" sel":"");
+      var left = (hs.x - hs.w/2), top = (hs.y - hs.h/2);
+      return '<button type="button" class="'+cls+'" style="left:'+left+'%;top:'+top+'%;width:'+hs.w+'%;height:'+hs.h+'%" data-u="'+esc(hs.u)+'">'+
+        esc(displayUnidad(hs.u)) + (ocupado?'<span class="hs-badge">'+ocupado+'</span>':'') +
+      '</button>';
+    }).join("");
+
+    el.innerHTML =
+      '<div class="topbar"><div><h2>Mapa de asignación</h2><div class="sub">Selecciona una casa para ver y asignar quién trabaja ahí</div></div></div>'+
+      '<div class="mapa-toolrow"><label style="margin:0">Fecha:</label><input type="date" id="fecha-mapa" value="'+state.fecha+'"><button class="btn secondary small" id="btn-cambiar-unidad">Buscar unidad…</button></div>'+
+      '<div class="mapa-layout">'+
+        '<div class="mapa-plan-col">'+
+          '<div class="plan-tabs">'+
+            '<button data-plano="lp" class="'+(state.mapaSitio==="lp"?"active":"")+'">La Pampa</button>'+
+            '<button data-plano="losp" class="'+(state.mapaSitio==="losp"?"active":"")+'">Los Parques</button>'+
+          '</div>'+
+          '<div class="plan-scroll"><div class="plan-container"><img class="plan-img" src="'+planUrl+'">'+hsHtml+'</div></div>'+
+        '</div>'+
+        '<div class="mapa-detail-col card" style="padding:16px 18px">'+renderUnidadDetalleHtml(porUnidad)+'</div>'+
+      '</div>';
+
+    document.getElementById("fecha-mapa").addEventListener("change", function(e){
+      state.fecha = e.target.value || todayStr();
+      subscribeAsignacionesDia();
+      renderMapa();
+    });
+    el.querySelectorAll(".plan-tabs button").forEach(function(b){
+      b.addEventListener("click", function(){ state.mapaSitio = b.getAttribute("data-plano"); renderMapa(); });
+    });
+    el.querySelectorAll(".hs").forEach(function(b){
+      b.addEventListener("click", function(){
+        var u = b.getAttribute("data-u");
+        if(BUILDING_UNITS[u]) openBuildingPicker(u, porUnidad);
+        else seleccionarUnidad(u);
+      });
+    });
+    document.getElementById("btn-cambiar-unidad").addEventListener("click", function(){ openUnidadPicker(porUnidad); });
+
+    bindUnidadDetalleEvents();
+  }
+
+  function seleccionarUnidad(u){
+    state.mapaUnidad = u;
+    state.mapaSitio = ALL_LOSP[u] ? "losp" : "lp";
+    closeModal();
+    renderMapa();
+  }
+
+  function renderUnidadDetalleHtml(porUnidad){
+    if(!state.mapaUnidad){
+      return '<div class="unit-empty"><div style="font-size:34px">🏠</div><h3>Selecciona una casa</h3><p>Haz clic en el plano o usa "Buscar unidad…" para ver quién está asignado ahí.</p></div>';
+    }
+    var u = state.mapaUnidad;
+    var trabajadores = porUnidad[u] || [];
+    var sugerido = sugerirProyectoPorUnidad(u);
+    var proyecto = state.proyectos.find(function(p){ return p.id===sugerido; });
+
+    var lista = trabajadores.length ? trabajadores.map(function(t){
+      return '<div class="unit-worker"><div><div class="who">'+esc(colaboradorNombrePorCasco(t.casco))+'</div>'+
+        '<div class="what">'+(t.actividadCodigo?esc(t.actividadCodigo)+' — '+esc(t.actividad||""):(t.proyecto?esc(t.proyecto):"Sin actividad asignada"))+'</div></div>'+
+        '<button class="btn danger small" data-quitar="'+esc(t.casco)+'">Quitar</button></div>';
+    }).join("") : '<div class="empty" style="padding:20px 10px"><p>Nadie asignado aquí todavía para esta fecha.</p></div>';
+
+    return '<div class="unit-hd"><div><div class="unit-title mono">'+esc(displayUnidad(u))+'</div>'+
+        '<div class="unit-sub">'+(ALL_LOSP[u]?"Los Parques":"La Pampa")+
+        (proyecto? ' · <span class="pill clay">'+esc(proyecto.nombre)+'</span>' : '')+'</div>'+
+      '</div></div>'+
+      '<div class="unit-list">'+lista+'</div>'+
+      renderAddWorkerFormHtml(sugerido);
+  }
+
+  function colabOptionsFiltradas(filtro){
+    var f = (filtro||"").trim().toLowerCase();
+    var lista = state.colaboradores.filter(function(c){ return c.activo!==false; });
+    if(f){
+      lista = lista.filter(function(c){
+        return String(c.casco).toLowerCase().indexOf(f)>=0 || c.nombre.toLowerCase().indexOf(f)>=0;
+      });
+    }
+    lista = lista.slice().sort(function(a,b){ return a.nombre.localeCompare(b.nombre); });
+    if(!lista.length) return '<option value="">— sin resultados —</option>';
+    return '<option value="">— elegir colaborador ('+lista.length+') —</option>' +
+      lista.map(function(c){ return '<option value="'+esc(c.casco)+'">#'+esc(c.casco)+' — '+esc(c.nombre)+'</option>'; }).join("");
+  }
+  function renderAddWorkerFormHtml(sugeridoProyectoId){
+    return '<div class="addworker-form">'+
+      '<label style="margin:0;font-weight:600">+ Agregar colaborador a esta casa</label>'+
+      '<input type="text" id="mapa-colab-buscar" placeholder="Buscar por casco o nombre…" value="'+esc(state.mapaColabFiltro)+'">'+
+      '<select id="mapa-colab-sel" size="6">'+colabOptionsFiltradas(state.mapaColabFiltro)+'</select>'+
+      '<div class="field-row">'+
+        '<select id="mapa-proy-sel">'+proyectoOptionsHtml(sugeridoProyectoId)+'</select>'+
+        '<select id="mapa-act-sel">'+actividadOptionsHtml(sugeridoProyectoId,"")+'</select>'+
+      '</div>'+
+      '<button class="btn" id="btn-agregar-a-unidad" '+(state.dbReady===false?'disabled':'')+'>Agregar</button>'+
+    '</div>';
+  }
+
+  function bindUnidadDetalleEvents(){
+    if(!state.mapaUnidad) return;
+    var proySel = document.getElementById("mapa-proy-sel");
+    var actSel = document.getElementById("mapa-act-sel");
+    if(proySel) proySel.addEventListener("change", function(){ actSel.innerHTML = actividadOptionsHtml(proySel.value, ""); });
+
+    var colabBuscar = document.getElementById("mapa-colab-buscar");
+    var colabSel = document.getElementById("mapa-colab-sel");
+    if(colabBuscar) colabBuscar.addEventListener("input", function(){
+      state.mapaColabFiltro = colabBuscar.value;
+      colabSel.innerHTML = colabOptionsFiltradas(state.mapaColabFiltro);
+    });
+
+    document.querySelectorAll("[data-quitar]").forEach(function(b){
+      b.addEventListener("click", function(){
+        if(!confirm("¿Quitar esta asignación de la casa?")) return;
+        quitarDeUnidad(b.getAttribute("data-quitar"));
+      });
+    });
+
+    var addBtn = document.getElementById("btn-agregar-a-unidad");
+    if(addBtn) addBtn.addEventListener("click", function(){
+      var casco = document.getElementById("mapa-colab-sel").value;
+      if(!casco){ alert("Elige un colaborador."); return; }
+      agregarAUnidad(casco, state.mapaUnidad,
+        document.getElementById("mapa-proy-sel").value,
+        document.getElementById("mapa-act-sel").value);
+    });
+  }
+
+  function agregarAUnidad(casco, unidad, proyectoId, actividadId){
+    if(state.dbReady===false) return;
+    var ref = db.collection("asignaciones").doc(casco+"__"+state.fecha);
+    var codigoInfo = state.codigosPresupuestarios.find(function(x){ return x.id===actividadId; });
+    ref.get().then(function(snap){
+      var base = snap.exists ? snap.data() : {};
+      var data = Object.assign({}, base, {
+        colaboradorId: casco,
+        fecha: state.fecha,
+        sitio: ALL_LOSP[unidad] ? "Parques" : "La Pampa",
+        tipo: "trabajo",
+        unidad: unidad,
+        proyectoId: proyectoId || base.proyectoId || "",
+        proyecto: proyectoId ? proyectoNombre(proyectoId) : (base.proyecto||""),
+        actividadCodigoId: actividadId || "",
+        actividadCodigo: codigoInfo ? codigoInfo.codigo : "",
+        actividad: codigoInfo ? codigoInfo.descripcion : ""
+      });
+      return ref.set(data);
+    }).then(function(){ state.mapaColabFiltro = ""; renderMapa(); })
+      .catch(function(err){ alert("No se pudo guardar: "+err.message); });
+  }
+
+  function quitarDeUnidad(casco){
+    if(state.dbReady===false) return;
+    var ref = db.collection("asignaciones").doc(casco+"__"+state.fecha);
+    ref.get().then(function(snap){
+      if(!snap.exists) return;
+      var data = Object.assign({}, snap.data());
+      delete data.unidad;
+      return ref.set(data);
+    }).then(function(){ renderMapa(); })
+      .catch(function(err){ alert("No se pudo actualizar: "+err.message); });
+  }
+
+  function openBuildingPicker(bk, porUnidad){
+    var units = BUILDING_UNITS[bk] || [];
+    var grid = units.map(function(u){
+      var ocupado = (porUnidad[u]||[]).length;
+      return '<button type="button" class="ubtn'+(ocupado?" ocupado":"")+'" data-u="'+esc(u)+'">'+esc(u)+(ocupado?'<span class="ubadge">'+ocupado+'</span>':'')+'</button>';
+    }).join("");
+    var html = '<div class="modal-backdrop" id="modal-backdrop"><div class="modal" style="max-width:380px">'+
+      '<h3>'+esc(bk)+' — unidades</h3>'+
+      '<div class="ugrid">'+grid+'</div>'+
+      '<div class="modal-actions"><button type="button" class="btn secondary" id="modal-cancel">Cerrar</button></div>'+
+    '</div></div>';
+    document.getElementById("modal-slot").innerHTML = html;
+    document.getElementById("modal-cancel").addEventListener("click", closeModal);
+    document.getElementById("modal-backdrop").addEventListener("click", function(e){ if(e.target.id==="modal-backdrop") closeModal(); });
+    document.querySelectorAll("#modal-slot [data-u]").forEach(function(b){
+      b.addEventListener("click", function(){ seleccionarUnidad(b.getAttribute("data-u")); });
+    });
+  }
+
+  function openUnidadPicker(porUnidad){
+    var groupsHtml = UNIDAD_GROUPS.map(function(g){
+      var items = g.units.map(function(u){
+        var ocupado = (porUnidad[u]||[]).length;
+        return '<button type="button" class="ubtn'+(ocupado?" ocupado":"")+'" data-u="'+esc(u)+'">'+esc(displayUnidad(u))+(ocupado?'<span class="ubadge">'+ocupado+'</span>':'')+'</button>';
+      }).join("");
+      return '<div class="frente-hd">'+esc(g.label)+'</div><div class="ugrid">'+items+'</div>';
+    }).join("");
+    var html = '<div class="modal-backdrop" id="modal-backdrop"><div class="modal" style="max-width:560px;max-height:80vh;overflow-y:auto">'+
+      '<h3>Buscar unidad</h3>'+groupsHtml+
+      '<div class="modal-actions"><button type="button" class="btn secondary" id="modal-cancel">Cerrar</button></div>'+
+    '</div></div>';
+    document.getElementById("modal-slot").innerHTML = html;
+    document.getElementById("modal-cancel").addEventListener("click", closeModal);
+    document.getElementById("modal-backdrop").addEventListener("click", function(e){ if(e.target.id==="modal-backdrop") closeModal(); });
+    document.querySelectorAll("#modal-slot [data-u]").forEach(function(b){
+      b.addEventListener("click", function(){ seleccionarUnidad(b.getAttribute("data-u")); });
+    });
+  }
+
+  // =========================================================
+  // RESUMEN
+  // =========================================================
+  function renderResumen(){
+    var el = document.getElementById("view-resumen");
+    var colabs = state.colaboradores.filter(function(c){ return c.activo!==false && (c.sitio||"La Pampa")===state.sitioActivo; });
+
+    var totalTrabajados = 0, totalAusencias = 0;
+    var filas = colabs.map(function(c){
+      var regs = (state.asignacionesResumen[c.casco]||[]).filter(function(r){ return r.sitio===state.sitioActivo || !r.sitio; });
+      var dias = regs.filter(function(r){ return r.tipo!=="ausencia"; }).length;
+      var ausRegs = regs.filter(function(r){ return r.tipo==="ausencia"; });
+      var porCodigo = {};
+      ausRegs.forEach(function(r){ porCodigo[r.codigoAusencia] = (porCodigo[r.codigoAusencia]||0)+1; });
+      var codigosTxt = Object.keys(porCodigo).map(function(k){ return (k||"?")+':'+porCodigo[k]; }).join(", ");
+
+      totalTrabajados += dias;
+      totalAusencias += ausRegs.length;
+
+      return '<tr>'+
+        '<td class="name-cell">'+esc(c.nombre)+' <span class="casco-chip">#'+esc(c.casco)+'</span></td>'+
+        '<td class="mono">'+dias+'</td>'+
+        '<td>'+(ausRegs.length ? '<span class="pill amber">'+ausRegs.length+'</span> <span class="muted" style="font-size:12px">'+esc(codigosTxt)+'</span>' : '<span class="pill green">0</span>')+'</td>'+
+      '</tr>';
+    }).join("");
+
+    el.innerHTML =
+      '<div class="topbar"><div><h2>Resumen del período</h2><div class="sub">Días trabajados y ausencias por colaborador</div></div></div>'+
+      '<div class="toolrow">'+siteTabsHtml()+
+        '<label>Desde</label><input type="date" id="resumen-desde" value="'+state.resumenDesde+'">'+
+        '<label>Hasta</label><input type="date" id="resumen-hasta" value="'+state.resumenHasta+'">'+
+      '</div>'+
+      '<div class="stat-row">'+
+        '<div class="card stat"><div class="label">Colaboradores</div><div class="value">'+colabs.length+'</div></div>'+
+        '<div class="card stat"><div class="label">Días trabajados (suma)</div><div class="value">'+totalTrabajados+'</div></div>'+
+        '<div class="card stat"><div class="label">Ausencias (suma)</div><div class="value">'+totalAusencias+'</div></div>'+
+      '</div>'+
+      (colabs.length===0 ?
+        '<div class="card empty"><h3>Sin colaboradores en este sitio</h3></div>' :
+        '<div class="card table-wrap"><table><thead><tr><th>Colaborador</th><th>Días trabajados</th><th>Ausencias</th></tr></thead><tbody>'+filas+'</tbody></table></div>');
+
+    bindSiteTabs(el, renderResumen);
+    document.getElementById("resumen-desde").addEventListener("change", function(e){ state.resumenDesde = e.target.value; subscribeAsignacionesResumen(); renderResumen(); });
+    document.getElementById("resumen-hasta").addEventListener("change", function(e){ state.resumenHasta = e.target.value; subscribeAsignacionesResumen(); renderResumen(); });
+  }
+
+  // =========================================================
+  // COLABORADORES
+  // =========================================================
+  function renderColaboradores(){
+    var el = document.getElementById("view-colaboradores");
+    var filtro = state.filtroColab || "";
+    var lista = state.colaboradores.filter(function(c){ return !filtro || c.nombre.toLowerCase().indexOf(filtro.toLowerCase())>=0; });
+    var rows = lista.map(function(c){
+      return '<tr>'+
+        '<td class="casco-chip">#'+esc(c.casco)+'</td>'+
+        '<td class="name-cell">'+esc(c.nombre)+(c.activo===false?' <span class="pill idle">inactivo</span>':'')+'</td>'+
+        '<td class="muted">'+esc(c.ocupacion||"—")+'</td>'+
+        '<td>'+esc(c.sitio||"La Pampa")+'</td>'+
+        '<td><button class="btn secondary small" data-edit="'+c.id+'">Editar</button> <button class="btn danger small" data-del="'+c.id+'">Eliminar</button></td>'+
+      '</tr>';
+    }).join("");
+
+    el.innerHTML =
+      '<div class="topbar"><div><h2>Colaboradores</h2><div class="sub">'+state.colaboradores.length+' registrados</div></div>'+
+        '<button class="btn" id="btn-nuevo-colab" '+(state.dbReady===false?'disabled':'')+'>+ Agregar</button></div>'+
+      '<div class="toolrow"><input type="text" class="search-box" id="buscar-colab-tab" placeholder="Buscar por nombre…" value="'+esc(filtro)+'"></div>'+
+      (state.colaboradores.length===0 ?
+        '<div class="card empty"><h3>Aún no hay colaboradores</h3></div>' :
+        '<div class="card table-wrap"><table><thead><tr><th>Casco</th><th>Nombre</th><th>Ocupación</th><th>Sitio</th><th></th></tr></thead><tbody>'+rows+'</tbody></table></div>');
+
+    document.getElementById("btn-nuevo-colab").addEventListener("click", function(){ openColabModal(null); });
+    document.getElementById("buscar-colab-tab").addEventListener("input", function(e){ state.filtroColab = e.target.value; renderColaboradores(); });
+    el.querySelectorAll("[data-edit]").forEach(function(b){ b.addEventListener("click", function(){ openColabModal(b.getAttribute("data-edit")); }); });
+    el.querySelectorAll("[data-del]").forEach(function(b){ b.addEventListener("click", function(){
+      var c = state.colaboradores.find(function(x){ return x.id===b.getAttribute("data-del"); });
+      if(!c) return;
+      if(!confirm('Eliminar a "'+c.nombre+'"? Las asignaciones ya registradas conservarán la referencia.')) return;
+      db.collection("colaboradores").doc(c.id).delete().catch(function(err){ alert("No se pudo eliminar: "+err.message); });
+    }); });
+  }
+
+  function openColabModal(id){
+    var c = id ? state.colaboradores.find(function(x){ return x.id===id; }) : null;
+    var v = c || { casco:"", nombre:"", ocupacion:"", sitio:"La Pampa", activo:true };
+    var sitioOpts = SITIOS.map(function(s){ return '<option '+(v.sitio===s?"selected":"")+'>'+s+'</option>'; }).join("");
+    var html =
+      '<div class="modal-backdrop" id="modal-backdrop"><div class="modal">'+
+        '<h3>'+(c?"Editar colaborador":"Nuevo colaborador")+'</h3>'+
+        '<form id="colab-form">'+
+          '<div class="field-row">'+
+            '<div class="field"><label>Casco / ID</label><input type="text" name="casco" required value="'+esc(v.casco)+'" '+(c?"readonly":"")+'></div>'+
+            '<div class="field"><label>Sitio</label><select name="sitio">'+sitioOpts+'</select></div>'+
+          '</div>'+
+          '<div class="field"><label>Nombre completo</label><input type="text" name="nombre" required value="'+esc(v.nombre)+'"></div>'+
+          '<div class="field"><label>Ocupación</label><input type="text" name="ocupacion" value="'+esc(v.ocupacion)+'"></div>'+
+          '<div class="checkbox-row"><input type="checkbox" name="activo" id="chk-activo-colab" '+(v.activo!==false?"checked":"")+'><label for="chk-activo-colab" style="margin:0">Activo</label></div>'+
+          '<div class="modal-actions">'+
+            '<button type="button" class="btn secondary" id="modal-cancel">Cancelar</button>'+
+            '<button type="submit" class="btn">Guardar</button>'+
+          '</div>'+
+        '</form>'+
+      '</div></div>';
+    document.getElementById("modal-slot").innerHTML = html;
+    document.getElementById("modal-cancel").addEventListener("click", closeModal);
+    document.getElementById("modal-backdrop").addEventListener("click", function(e){ if(e.target.id==="modal-backdrop") closeModal(); });
+    document.getElementById("colab-form").addEventListener("submit", function(e){
+      e.preventDefault();
+      var fd = new FormData(e.target);
+      var casco = (fd.get("casco")||"").trim();
+      if(!casco) return;
+      var data = {
+        casco: casco,
+        nombre: (fd.get("nombre")||"").trim(),
+        ocupacion: (fd.get("ocupacion")||"").trim(),
+        sitio: fd.get("sitio")||"La Pampa",
+        activo: fd.get("activo")==="on"
+      };
+      if(!data.nombre) return;
+      db.collection("colaboradores").doc(casco).set(data).then(closeModal).catch(function(err){ alert("No se pudo guardar: "+err.message); });
+    });
+  }
+  function closeModal(){ document.getElementById("modal-slot").innerHTML = ""; }
+
+  // =========================================================
+  // LISTAS (proyectos / códigos presupuestarios)
+  // =========================================================
+  function renderListas(){
+    var el = document.getElementById("view-listas");
+    var proyectosTodos = state.proyectos.slice().sort(function(a,b){ return a.nombre.localeCompare(b.nombre); });
+
+    function proyectoItemsHtml(){
+      return proyectosTodos.map(function(x){
+        return '<li><span class="nm '+(x.activo===false?"inactivo":"")+'">'+esc(x.nombre)+(x.codigoProyecto?' <span class="muted mono" style="font-size:11px">'+esc(x.codigoProyecto)+'</span>':'')+'</span>'+
+          '<span><button class="btn secondary small" data-toggle-proy="'+x.id+'">'+(x.activo===false?"Reactivar":"Desactivar")+'</button> '+
+          '<button class="btn danger small" data-del-proy="'+x.id+'">Eliminar</button></span></li>';
+      }).join("");
+    }
+
+    var codigosOrdenados = state.codigosPresupuestarios.slice().sort(function(a,b){
+      var la = a.alcance==="default" ? "" : proyectoNombre(a.alcance);
+      var lb = b.alcance==="default" ? "" : proyectoNombre(b.alcance);
+      if(la!==lb) return la.localeCompare(lb);
+      return (a.codigo||"").localeCompare(b.codigo||"");
+    });
+    function codigoItemsHtml(){
+      return codigosOrdenados.map(function(x){
+        var alcanceTxt = x.alcance==="default" ? "Por defecto" : (proyectoNombre(x.alcance) || x.alcance);
+        return '<li><span class="nm '+(x.activo===false?"inactivo":"")+'"><span class="mono">'+esc(x.codigo)+'</span> — '+esc(x.descripcion)+
+          '<div class="muted" style="font-size:11px">'+esc(alcanceTxt)+' · '+esc(x.categoria||"")+'</div></span>'+
+          '<span><button class="btn secondary small" data-toggle-cod="'+x.id+'">'+(x.activo===false?"Reactivar":"Desactivar")+'</button> '+
+          '<button class="btn danger small" data-del-cod="'+x.id+'">Eliminar</button></span></li>';
+      }).join("");
+    }
+    var alcanceOpts = '<option value="default">Por defecto (todos los proyectos sin detalle)</option>' +
+      proyectosTodos.filter(function(p){ return p.activo!==false; }).map(function(p){ return '<option value="'+esc(p.id)+'">'+esc(p.nombre)+'</option>'; }).join("");
+
+    el.innerHTML =
+      '<div class="topbar"><div><h2>Proyectos y códigos presupuestarios</h2><div class="sub">Catálogos usados al asignar la actividad diaria</div></div></div>'+
+      '<div class="lists-grid">'+
+        '<div class="card" style="padding:16px 18px"><h3 style="font-size:15px;margin-bottom:12px">Proyectos ('+proyectosTodos.length+')</h3>'+
+          '<div class="list-add"><input type="text" id="nuevo-proyecto" placeholder="Nuevo proyecto…"><button class="btn small" id="add-proyecto">Agregar</button></div>'+
+          '<ul class="simple-list">'+proyectoItemsHtml()+'</ul>'+
+        '</div>'+
+        '<div class="card" style="padding:16px 18px"><h3 style="font-size:15px;margin-bottom:12px">Códigos presupuestarios ('+codigosOrdenados.length+')</h3>'+
+          '<div class="field-row" style="margin-bottom:8px">'+
+            '<input type="text" id="nuevo-cod-codigo" placeholder="Código">'+
+            '<input type="text" id="nuevo-cod-desc" placeholder="Descripción">'+
+          '</div>'+
+          '<div class="list-add">'+
+            '<select id="nuevo-cod-alcance" style="flex:1">'+alcanceOpts+'</select>'+
+            '<button class="btn small" id="add-codigo">Agregar</button>'+
+          '</div>'+
+          '<ul class="simple-list">'+codigoItemsHtml()+'</ul>'+
+        '</div>'+
+      '</div>';
+
+    document.getElementById("add-proyecto").addEventListener("click", function(){
+      var inp = document.getElementById("nuevo-proyecto");
+      var nombre = inp.value.trim();
+      if(!nombre) return;
+      db.collection("proyectos").add({nombre:nombre, activo:true}).then(function(){ inp.value=""; });
+    });
+    document.getElementById("add-codigo").addEventListener("click", function(){
+      var codIn = document.getElementById("nuevo-cod-codigo");
+      var descIn = document.getElementById("nuevo-cod-desc");
+      var alcSel = document.getElementById("nuevo-cod-alcance");
+      var codigo = codIn.value.trim(), descripcion = descIn.value.trim();
+      if(!codigo || !descripcion) return;
+      db.collection("codigos_presupuestarios").add({codigo:codigo, descripcion:descripcion, categoria:"Mano de Obra", alcance:alcSel.value, activo:true})
+        .then(function(){ codIn.value=""; descIn.value=""; });
+    });
+    el.querySelectorAll("[data-toggle-proy]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var id = b.getAttribute("data-toggle-proy");
+        var item = state.proyectos.find(function(x){ return x.id===id; });
+        db.collection("proyectos").doc(id).update({activo: item.activo===false});
+      });
+    });
+    el.querySelectorAll("[data-del-proy]").forEach(function(b){
+      b.addEventListener("click", function(){
+        if(!confirm("¿Eliminar este proyecto de la lista?")) return;
+        db.collection("proyectos").doc(b.getAttribute("data-del-proy")).delete();
+      });
+    });
+    el.querySelectorAll("[data-toggle-cod]").forEach(function(b){
+      b.addEventListener("click", function(){
+        var id = b.getAttribute("data-toggle-cod");
+        var item = state.codigosPresupuestarios.find(function(x){ return x.id===id; });
+        db.collection("codigos_presupuestarios").doc(id).update({activo: item.activo===false});
+      });
+    });
+    el.querySelectorAll("[data-del-cod]").forEach(function(b){
+      b.addEventListener("click", function(){
+        if(!confirm("¿Eliminar este código presupuestario?")) return;
+        db.collection("codigos_presupuestarios").doc(b.getAttribute("data-del-cod")).delete();
+      });
+    });
+  }
+
+  boot();
+  renderAll();
+})();
+</script>
+</body>
+</html>
