@@ -783,11 +783,17 @@
   // =========================================================
   function displayUnidad(u){ return u.indexOf("LP")===0 ? u.slice(2) : u; }
   function sugerirProyectoPorUnidad(unidad){
-    var directo = state.proyectos.find(function(p){ return p.nombre.toLowerCase()===unidad.toLowerCase(); });
+    var activos = state.proyectos.filter(function(p){ return p.activo!==false; });
+    var u = unidad.toLowerCase();
+    var directo = activos.find(function(p){ return p.nombre.toLowerCase()===u; });
     if(directo) return directo.id;
     var numero = displayUnidad(unidad);
-    if(!/^[0-9]+$/.test(numero)) return "";
-    var match = state.proyectos.find(function(p){
+    if(!/^[0-9]+$/.test(numero)){
+      // Unidades con nombre (ej. "Club House"): proyecto cuyo nombre la contiene
+      var contiene = activos.find(function(p){ return p.nombre.toLowerCase().indexOf(u) >= 0; });
+      return contiene ? contiene.id : "";
+    }
+    var match = activos.find(function(p){
       var tokens = p.nombre.split(/[^0-9A-Za-z]+/);
       return tokens.indexOf(numero) >= 0;
     });
