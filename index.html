@@ -185,9 +185,42 @@
     .field-row{ grid-template-columns:1fr; }
     .lists-grid{ grid-template-columns:1fr; }
   }
+
+  /* Inicio de sesión */
+  body.auth-pending .app{ display:none; }
+  .login-screen{ min-height:100vh; display:none; align-items:center; justify-content:center; padding:24px 16px; }
+  body.auth-pending .login-screen{ display:flex; }
+  .login-card{ width:100%; max-width:380px; background:var(--surface); border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow); padding:28px 26px; }
+  .login-card .eyebrow{ font-size:11px; letter-spacing:.08em; text-transform:uppercase; color:var(--sage); }
+  .login-card h1{ font-size:22px; margin:2px 0 6px; }
+  .login-card p.sub{ color:var(--ink-soft); font-size:13px; margin:0 0 18px; }
+  .login-card .field{ margin-bottom:12px; }
+  .login-card input{ width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:8px; background:var(--parchment); }
+  .login-card .btn{ width:100%; justify-content:center; padding:10px 14px; margin-top:4px; }
+  .login-card .btn:disabled{ opacity:.6; cursor:wait; }
+  .login-msg{ font-size:12.5px; margin-top:12px; min-height:18px; }
+  .login-msg.err{ color:var(--rose); }
+  .login-msg.ok{ color:var(--green); }
+  .linkbtn{ background:none; border:none; padding:0; color:var(--clay-dark); cursor:pointer; font-size:12.5px; text-decoration:underline; margin-top:14px; }
+  .userbox{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:11.5px; color:var(--ink-soft); }
+  .userbox span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .userbox button{ flex:none; border:1px solid var(--border); background:var(--surface); border-radius:6px; padding:4px 8px; font-size:11.5px; cursor:pointer; color:var(--ink); }
 </style>
 </head>
-<body>
+<body class="auth-pending">
+
+<div class="login-screen" id="login-screen">
+  <form class="login-card" id="login-form" autocomplete="on">
+    <div class="eyebrow">Parque Tempisque</div>
+    <h1>Asignación de Campo</h1>
+    <p class="sub">Ingrese con el correo y la contraseña que le asignaron.</p>
+    <div class="field"><label for="login-email">Correo</label><input type="email" id="login-email" autocomplete="username" required></div>
+    <div class="field"><label for="login-pass">Contraseña</label><input type="password" id="login-pass" autocomplete="current-password" required></div>
+    <button type="submit" class="btn" id="login-btn">Entrar</button>
+    <div class="login-msg" id="login-msg" role="status"></div>
+    <button type="button" class="linkbtn" id="login-reset">¿Olvidó su contraseña?</button>
+  </form>
+</div>
 
 <div class="app">
   <aside class="sidebar">
@@ -200,6 +233,7 @@
       <button class="navbtn" data-tab="listas"><span class="dot"></span>Proyectos / Códigos</button>
     </nav>
     <button class="btn secondary" id="btn-exportar-excel" style="margin-top:auto;width:100%;justify-content:center">⬇ Exportar Excel</button>
+    <div class="userbox"><span id="user-email"></span><button type="button" id="btn-logout">Salir</button></div>
     <div class="sidebar-foot" id="connStatus">Conectando…</div>
   </aside>
 
@@ -218,6 +252,7 @@
 <!-- Firebase (rellena firebase-config.js con los datos de tu proyecto) -->
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
 <script src="firebase-config.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/exceljs@4.4.0/dist/exceljs.min.js"></script>
 
@@ -417,12 +452,30 @@
 
   function boot(){
     if(typeof FIREBASE_CONFIG === "undefined" || !FIREBASE_CONFIG.apiKey || FIREBASE_CONFIG.apiKey.indexOf("PEGA_")===0){
+      document.body.classList.remove("auth-pending");
       onDbUnavailable("Falta configurar Firebase: edita firebase-config.js con los datos de tu proyecto (ver README).");
       return;
     }
     try{
       firebase.initializeApp(FIREBASE_CONFIG);
       db = firebase.firestore();
+    }catch(e){
+      document.body.classList.remove("auth-pending");
+      onDbUnavailable("No se pudo conectar a Firebase: "+e.message);
+      return;
+    }
+    initLogin();
+    var suscrito = false;
+    firebase.auth().onAuthStateChanged(function(user){
+      if(!user){
+        document.body.classList.add("auth-pending");
+        if(suscrito) location.reload(); // al cerrar sesión: cortar todos los listeners
+        return;
+      }
+      document.body.classList.remove("auth-pending");
+      document.getElementById("user-email").textContent = user.email || "";
+      if(suscrito) return;
+      suscrito = true;
       state.dbReady = true;
       document.getElementById("connStatus").textContent = "Conectado · datos en vivo";
       subscribeColaboradores();
@@ -430,9 +483,43 @@
       subscribeCodigosPresupuestarios();
       subscribeAsignacionesDia();
       subscribeAsignacionesResumen();
-    }catch(e){
-      onDbUnavailable("No se pudo conectar a Firebase: "+e.message);
-    }
+    });
+  }
+  function mensajeAuth(e){
+    var c = (e && e.code) || "";
+    if(c==="auth/invalid-credential" || c==="auth/wrong-password" || c==="auth/user-not-found" || c==="auth/invalid-login-credentials") return "Correo o contraseña incorrectos.";
+    if(c==="auth/invalid-email") return "El correo no es válido.";
+    if(c==="auth/user-disabled") return "Esta cuenta está desactivada. Consulte con el administrador.";
+    if(c==="auth/too-many-requests") return "Demasiados intentos. Espere unos minutos e intente de nuevo.";
+    if(c==="auth/network-request-failed") return "Sin conexión a internet.";
+    if(c==="auth/operation-not-allowed" || c==="auth/configuration-not-found") return "El inicio de sesión aún no está habilitado en Firebase.";
+    return "No se pudo iniciar sesión" + (c ? " ("+c+")" : "") + ".";
+  }
+  function initLogin(){
+    var form = document.getElementById("login-form");
+    var msg = document.getElementById("login-msg");
+    var btn = document.getElementById("login-btn");
+    function setMsg(texto, tipo){ msg.textContent = texto; msg.className = "login-msg" + (tipo ? " "+tipo : ""); }
+    form.addEventListener("submit", function(e){
+      e.preventDefault();
+      var email = document.getElementById("login-email").value.trim();
+      var pass = document.getElementById("login-pass").value;
+      btn.disabled = true; setMsg("Ingresando…");
+      firebase.auth().signInWithEmailAndPassword(email, pass)
+        .then(function(){ setMsg(""); document.getElementById("login-pass").value = ""; })
+        .catch(function(err){ setMsg(mensajeAuth(err), "err"); })
+        .then(function(){ btn.disabled = false; });
+    });
+    document.getElementById("login-reset").addEventListener("click", function(){
+      var email = document.getElementById("login-email").value.trim();
+      if(!email){ setMsg("Escriba su correo arriba y vuelva a presionar este enlace.", "err"); return; }
+      firebase.auth().sendPasswordResetEmail(email)
+        .then(function(){ setMsg("Si el correo tiene cuenta, le llegará un enlace para cambiar la contraseña.", "ok"); })
+        .catch(function(err){ setMsg(mensajeAuth(err), "err"); });
+    });
+    document.getElementById("btn-logout").addEventListener("click", function(){
+      if(confirm("¿Cerrar sesión?")) firebase.auth().signOut();
+    });
   }
   function onDbUnavailable(msg){
     state.dbReady = false;
