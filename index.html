@@ -718,8 +718,8 @@
           '<option value="ausencia" '+(esAusencia?"selected":"")+'>Ausencia</option>'+
         '</select></td>'+
         '<td><div class="asig-cell trabajo-cell '+(esAusencia?"oculto":"")+'">'+
-          '<select class="tbl-select proyecto-sel" data-buscar style="min-width:170px">'+proyectoOptionsHtml(proyectoId)+'</select>'+
-          '<select class="tbl-select actividad-sel" data-buscar style="min-width:220px">'+actividadOptionsHtml(proyectoId, r.actividadCodigoId||"")+'</select>'+
+          '<select class="tbl-select proyecto-sel" data-buscar="Buscar proyecto…" style="min-width:170px">'+proyectoOptionsHtml(proyectoId)+'</select>'+
+          '<select class="tbl-select actividad-sel" data-buscar="Buscar actividad…" style="min-width:220px">'+actividadOptionsHtml(proyectoId, r.actividadCodigoId||"")+'</select>'+
         '</div>'+
         '<div class="asig-cell ausencia-cell '+(esAusencia?"":"oculto")+'">'+
           '<select class="tbl-select codigo-sel">'+codigoOpts+'</select>'+
@@ -929,8 +929,8 @@
       '<input type="text" id="mapa-colab-buscar" placeholder="Buscar por casco o nombre…" value="'+esc(state.mapaColabFiltro)+'">'+
       '<select id="mapa-colab-sel" size="6">'+colabOptionsFiltradas(state.mapaColabFiltro)+'</select>'+
       '<div class="field-row">'+
-        '<select id="mapa-proy-sel" data-buscar>'+proyectoOptionsHtml(sugeridoProyectoId)+'</select>'+
-        '<select id="mapa-act-sel" data-buscar>'+actividadOptionsHtml(sugeridoProyectoId,"")+'</select>'+
+        '<select id="mapa-proy-sel" data-buscar="Buscar proyecto…">'+proyectoOptionsHtml(sugeridoProyectoId)+'</select>'+
+        '<select id="mapa-act-sel" data-buscar="Buscar actividad…">'+actividadOptionsHtml(sugeridoProyectoId,"")+'</select>'+
       '</div>'+
       '<button class="btn" id="btn-agregar-a-unidad" '+(state.dbReady===false?'disabled':'')+'>Agregar</button>'+
     '</div>';
@@ -1272,7 +1272,8 @@
       var o = sel.options[sel.selectedIndex];
       var vacio = !o || !o.value;
       inp.value = vacio ? "" : o.textContent;
-      inp.placeholder = vacio ? ((o ? o.textContent.replace(/^—\s*|\s*—$/g, "") : "") || "Buscar…") : "Buscar…";
+      var sinOpciones = sel.options.length <= 1 && o;
+      inp.placeholder = sinOpciones ? o.textContent.replace(/^—\s*|\s*—$/g, "") : (sel.getAttribute("data-buscar") || "Buscar…");
       inp.title = inp.value;
       inp.disabled = sel.disabled;
     }
