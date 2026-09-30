@@ -187,12 +187,13 @@
   }
 
   /* Casilla con búsqueda (reemplaza visualmente a un <select data-buscar>) */
-  .sel-buscar{ position:relative; display:block; width:100%; text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:7px 26px 7px 9px; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .sel-buscar.tbl-select{ display:inline-block; width:auto; max-width:280px; padding:5px 24px 5px 7px; font-size:13px; vertical-align:middle; }
-  .sel-buscar::after{ content:"▾"; position:absolute; right:8px; top:50%; transform:translateY(-50%); color:var(--ink-soft); font-size:11px; }
-  .sel-buscar:disabled{ opacity:.55; cursor:not-allowed; }
-  .buscar-panel{ position:fixed; z-index:1000; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow); padding:8px; display:flex; flex-direction:column; gap:6px; }
-  .buscar-panel input{ width:100%; }
+  input.sel-buscar{ width:100%; padding-left:28px; padding-right:24px; text-overflow:ellipsis;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%238a8171' stroke-width='2.4' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E"),
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%238a8171' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat:no-repeat, no-repeat; background-position:9px 50%, right 9px center; }
+  input.sel-buscar.tbl-select{ display:inline-block; width:auto; max-width:280px; padding:5px 22px 5px 26px; font-size:13px; vertical-align:middle; background-position:7px 50%, right 7px center; }
+  input.sel-buscar:disabled{ opacity:.55; cursor:not-allowed; }
+  .buscar-panel{ position:fixed; z-index:1000; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow); padding:6px; }
   .buscar-panel ul{ list-style:none; margin:0; padding:0; overflow-y:auto; max-height:260px; }
   .buscar-panel li{ padding:7px 9px; border-radius:6px; cursor:pointer; font-size:13px; line-height:1.35; }
   .buscar-panel li:hover, .buscar-panel li.activo{ background:var(--clay-tint); color:var(--clay-dark); }
@@ -1262,44 +1263,63 @@
 
   // ── Casillas con búsqueda ──────────────────────────────────────────────
   // El <select data-buscar> sigue siendo la fuente de verdad (sus eventos "change" no cambian):
-  // se oculta y un botón abre un panel con buscador. Se aplica solo a cada casilla nueva.
+  // se oculta y en su lugar queda un cuadro de texto con lupa; al escribir se filtra la lista.
   (function(){
     var panel = null, selAbierto = null, visibles = [], idxActivo = -1;
     function normalizar(s){ return (s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
     function sincronizar(sel){
-      var b = sel.__btnBuscar; if(!b) return;
+      var inp = sel.__inputBuscar; if(!inp || sel === selAbierto) return;
       var o = sel.options[sel.selectedIndex];
-      b.textContent = o ? o.textContent : "";
-      b.title = b.textContent;
-      b.disabled = sel.disabled;
+      var vacio = !o || !o.value;
+      inp.value = vacio ? "" : o.textContent;
+      inp.placeholder = vacio ? ((o ? o.textContent.replace(/^—\s*|\s*—$/g, "") : "") || "Buscar…") : "Buscar…";
+      inp.title = inp.value;
+      inp.disabled = sel.disabled;
     }
     function mejorar(sel){
-      if(sel.__btnBuscar) return;
-      var b = document.createElement("button");
-      b.type = "button";
-      b.className = "sel-buscar" + (sel.classList.contains("tbl-select") ? " tbl-select" : "");
-      if(sel.style.minWidth) b.style.minWidth = sel.style.minWidth;
-      sel.__btnBuscar = b;
+      if(sel.__inputBuscar) return;
+      var inp = document.createElement("input");
+      inp.type = "text";
+      inp.autocomplete = "off";
+      inp.setAttribute("role", "combobox");
+      inp.className = "sel-buscar" + (sel.classList.contains("tbl-select") ? " tbl-select" : "");
+      if(sel.style.minWidth) inp.style.minWidth = sel.style.minWidth;
+      sel.__inputBuscar = inp;
       sel.style.display = "none";
-      sel.parentNode.insertBefore(b, sel.nextSibling);
-      b.addEventListener("click", function(){ abrir(sel); });
+      sel.parentNode.insertBefore(inp, sel.nextSibling);
+      inp.addEventListener("focus", function(){ abrir(sel); inp.select(); });
+      inp.addEventListener("click", function(){ if(selAbierto !== sel) abrir(sel); });
+      inp.addEventListener("input", function(){ if(selAbierto !== sel) abrir(sel); pintarLista(inp.value); });
+      inp.addEventListener("keydown", function(e){
+        if(selAbierto !== sel) return;
+        if(e.key==="ArrowDown"){ e.preventDefault(); if(idxActivo < visibles.length-1){ idxActivo++; marcarActivo(); } }
+        else if(e.key==="ArrowUp"){ e.preventDefault(); if(idxActivo > 0){ idxActivo--; marcarActivo(); } }
+        else if(e.key==="Enter"){ e.preventDefault(); if(visibles[idxActivo]) elegir(visibles[idxActivo].value); }
+        else if(e.key==="Escape"){ e.preventDefault(); cerrar(); inp.blur(); }
+      });
+      inp.addEventListener("blur", function(){ if(selAbierto === sel) cerrar(); });
+      inp.addEventListener("change", function(e){ e.stopPropagation(); }); // no disparar el guardado de la fila
       sel.addEventListener("change", function(){ sincronizar(sel); });
       new MutationObserver(function(){ sincronizar(sel); }).observe(sel, { childList:true, subtree:true, attributes:true, attributeFilter:["disabled"] });
       sincronizar(sel);
     }
     function cerrar(){
+      var sel = selAbierto;
       if(panel){ panel.remove(); panel = null; }
-      if(selAbierto && selAbierto.__btnBuscar && document.body.contains(selAbierto.__btnBuscar)) selAbierto.__btnBuscar.focus();
       selAbierto = null;
+      if(sel) sincronizar(sel);
     }
     function elegir(valor){
       var sel = selAbierto;
       cerrar();
-      if(!sel || sel.value === valor) return;
+      if(!sel) return;
+      sel.__inputBuscar.blur();
+      if(sel.value === valor) return;
       sel.value = valor;
       sel.dispatchEvent(new Event("change", { bubbles:true }));
     }
     function pintarLista(filtro){
+      if(!panel) return;
       var ul = panel.querySelector("ul");
       var palabras = normalizar(filtro).split(/\s+/).filter(Boolean);
       visibles = Array.prototype.filter.call(selAbierto.options, function(o){
@@ -1311,52 +1331,40 @@
       ul.innerHTML = visibles.length ? visibles.map(function(o, i){
         return '<li data-i="'+i+'" class="'+(i===idxActivo?"activo ":"")+(o.value===selAbierto.value?"elegido":"")+'">'+esc(o.textContent)+'</li>';
       }).join("") : '<div class="vacio">Sin resultados</div>';
+      ubicar();
     }
     function marcarActivo(){
       var lis = panel.querySelectorAll("li");
       lis.forEach(function(li, i){ li.classList.toggle("activo", i===idxActivo); });
       if(lis[idxActivo]) lis[idxActivo].scrollIntoView({ block:"nearest" });
     }
-    function ubicar(btn){
-      var r = btn.getBoundingClientRect();
+    function ubicar(){
+      if(!panel || !selAbierto) return;
+      var r = selAbierto.__inputBuscar.getBoundingClientRect();
       var ancho = Math.min(Math.max(r.width, 300), window.innerWidth - 16);
-      var izq = Math.min(Math.max(8, r.left), window.innerWidth - ancho - 8);
       panel.style.width = ancho + "px";
-      panel.style.left = izq + "px";
+      panel.style.left = Math.min(Math.max(8, r.left), window.innerWidth - ancho - 8) + "px";
       var alto = panel.offsetHeight;
-      var arriba = r.bottom + 4;
-      if(arriba + alto > window.innerHeight - 8 && r.top - alto - 4 > 8) arriba = r.top - alto - 4;
-      panel.style.top = Math.max(8, arriba) + "px";
+      var top = r.bottom + 4;
+      if(top + alto > window.innerHeight - 8 && r.top - alto - 4 > 8) top = r.top - alto - 4;
+      panel.style.top = Math.max(8, top) + "px";
     }
     function abrir(sel){
-      if(selAbierto === sel){ cerrar(); return; }
+      if(selAbierto === sel) return;
       cerrar();
       selAbierto = sel;
       panel = document.createElement("div");
       panel.className = "buscar-panel";
-      panel.innerHTML = '<input type="text" placeholder="Buscar…" autocomplete="off"><ul role="listbox"></ul>';
+      panel.innerHTML = '<ul role="listbox"></ul>';
       document.body.appendChild(panel);
-      var input = panel.querySelector("input");
-      pintarLista("");
-      ubicar(sel.__btnBuscar);
-      input.focus();
-      input.addEventListener("input", function(){ pintarLista(input.value); });
-      input.addEventListener("keydown", function(e){
-        if(e.key==="ArrowDown"){ e.preventDefault(); if(idxActivo < visibles.length-1){ idxActivo++; marcarActivo(); } }
-        else if(e.key==="ArrowUp"){ e.preventDefault(); if(idxActivo > 0){ idxActivo--; marcarActivo(); } }
-        else if(e.key==="Enter"){ e.preventDefault(); if(visibles[idxActivo]) elegir(visibles[idxActivo].value); }
-        else if(e.key==="Escape"){ e.preventDefault(); cerrar(); }
-      });
-      panel.addEventListener("mousedown", function(e){ e.stopPropagation(); });
+      panel.addEventListener("mousedown", function(e){ e.preventDefault(); }); // no quitar el foco del cuadro
       panel.querySelector("ul").addEventListener("click", function(e){
         var li = e.target.closest("li"); if(li) elegir(visibles[+li.getAttribute("data-i")].value);
       });
+      pintarLista("");
     }
-    document.addEventListener("mousedown", function(e){
-      if(panel && !panel.contains(e.target) && !(selAbierto && e.target === selAbierto.__btnBuscar)) cerrar();
-    });
-    window.addEventListener("resize", function(){ if(panel) cerrar(); });
-    document.addEventListener("scroll", function(e){ if(panel && !panel.contains(e.target)) cerrar(); }, true);
+    window.addEventListener("resize", ubicar);
+    document.addEventListener("scroll", function(e){ if(panel && !panel.contains(e.target)) ubicar(); }, true);
     function revisar(raiz){
       if(raiz.nodeType !== 1) return;
       if(raiz.matches && raiz.matches("select[data-buscar]")) mejorar(raiz);
