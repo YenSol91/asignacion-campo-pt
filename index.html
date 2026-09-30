@@ -185,6 +185,19 @@
     .field-row{ grid-template-columns:1fr; }
     .lists-grid{ grid-template-columns:1fr; }
   }
+
+  /* Casilla con búsqueda (reemplaza visualmente a un <select data-buscar>) */
+  .sel-buscar{ position:relative; display:block; width:100%; text-align:left; background:var(--surface); border:1px solid var(--border); border-radius:7px; padding:7px 26px 7px 9px; cursor:pointer; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .sel-buscar.tbl-select{ display:inline-block; width:auto; max-width:280px; padding:5px 24px 5px 7px; font-size:13px; vertical-align:middle; }
+  .sel-buscar::after{ content:"▾"; position:absolute; right:8px; top:50%; transform:translateY(-50%); color:var(--ink-soft); font-size:11px; }
+  .sel-buscar:disabled{ opacity:.55; cursor:not-allowed; }
+  .buscar-panel{ position:fixed; z-index:1000; background:var(--surface); border:1px solid var(--border); border-radius:10px; box-shadow:var(--shadow); padding:8px; display:flex; flex-direction:column; gap:6px; }
+  .buscar-panel input{ width:100%; }
+  .buscar-panel ul{ list-style:none; margin:0; padding:0; overflow-y:auto; max-height:260px; }
+  .buscar-panel li{ padding:7px 9px; border-radius:6px; cursor:pointer; font-size:13px; line-height:1.35; }
+  .buscar-panel li:hover, .buscar-panel li.activo{ background:var(--clay-tint); color:var(--clay-dark); }
+  .buscar-panel li.elegido{ font-weight:600; }
+  .buscar-panel .vacio{ padding:8px 9px; color:var(--ink-soft); font-size:12.5px; }
 </style>
 </head>
 <body>
@@ -396,9 +409,16 @@
   function codigoLabel(k){ var c = CODIGOS_AUSENCIA.find(function(x){ return x.key===k; }); return c ? c.label : k; }
   function proyectoNombre(id){ var p = state.proyectos.find(function(x){ return x.id===id; }); return p ? p.nombre : ""; }
   function codigosParaProyecto(proyectoId){
-    var specific = state.codigosPresupuestarios.filter(function(c){ return c.alcance===proyectoId && c.activo!==false; });
-    var list = specific.length ? specific : state.codigosPresupuestarios.filter(function(c){ return c.alcance==="default" && c.activo!==false; });
-    return list.slice().sort(function(a,b){ return (a.descripcion||"").localeCompare(b.descripcion||""); });
+    var porDescripcion = function(a,b){ return (a.descripcion||"").localeCompare(b.descripcion||""); };
+    var specific = state.codigosPresupuestarios.filter(function(c){ return c.alcance===proyectoId && c.activo!==false; }).sort(porDescripcion);
+    var genericos = state.codigosPresupuestarios.filter(function(c){ return c.alcance==="default" && c.activo!==false; }).sort(porDescripcion);
+    if(!specific.length) return genericos;
+    // Proyectos con incluirGenericos (ej. Costos indirectos): sus códigos propios primero y luego el catálogo genérico
+    var proyecto = state.proyectos.find(function(p){ return p.id===proyectoId; });
+    return proyecto && proyecto.incluirGenericos ? specific.concat(genericos) : specific;
+  }
+  function etiquetaCodigo(codigo, descripcion){
+    return [codigo, descripcion].filter(Boolean).join(" — ");
   }
   function proyectoOptionsHtml(selectedId){
     var proyectosActivos = state.proyectos.filter(function(p){ return p.activo!==false; }).slice().sort(function(a,b){ return a.nombre.localeCompare(b.nombre); });
@@ -411,7 +431,7 @@
     var list = codigosParaProyecto(proyectoId);
     if(!list.length) return '<option value="">— sin códigos disponibles —</option>';
     return '<option value="">— seleccionar —</option>' + list.map(function(c){
-      return '<option value="'+esc(c.id)+'" '+(c.id===selectedCodigo?"selected":"")+'>'+esc(c.codigo)+' — '+esc(c.descripcion)+'</option>';
+      return '<option value="'+esc(c.id)+'" '+(c.id===selectedCodigo?"selected":"")+'>'+esc(etiquetaCodigo(c.codigo, c.descripcion))+'</option>';
     }).join("");
   }
 
@@ -697,8 +717,8 @@
           '<option value="ausencia" '+(esAusencia?"selected":"")+'>Ausencia</option>'+
         '</select></td>'+
         '<td><div class="asig-cell trabajo-cell '+(esAusencia?"oculto":"")+'">'+
-          '<select class="tbl-select proyecto-sel" style="min-width:170px">'+proyectoOptionsHtml(proyectoId)+'</select>'+
-          '<select class="tbl-select actividad-sel" style="min-width:220px">'+actividadOptionsHtml(proyectoId, r.actividadCodigoId||"")+'</select>'+
+          '<select class="tbl-select proyecto-sel" data-buscar style="min-width:170px">'+proyectoOptionsHtml(proyectoId)+'</select>'+
+          '<select class="tbl-select actividad-sel" data-buscar style="min-width:220px">'+actividadOptionsHtml(proyectoId, r.actividadCodigoId||"")+'</select>'+
         '</div>'+
         '<div class="asig-cell ausencia-cell '+(esAusencia?"":"oculto")+'">'+
           '<select class="tbl-select codigo-sel">'+codigoOpts+'</select>'+
@@ -877,7 +897,7 @@
 
     var lista = trabajadores.length ? trabajadores.map(function(t){
       return '<div class="unit-worker"><div><div class="who">'+esc(colaboradorNombrePorCasco(t.casco))+'</div>'+
-        '<div class="what">'+(t.actividadCodigo?esc(t.actividadCodigo)+' — '+esc(t.actividad||""):(t.proyecto?esc(t.proyecto):"Sin actividad asignada"))+'</div></div>'+
+        '<div class="what">'+((t.actividadCodigo||t.actividad)?esc(etiquetaCodigo(t.actividadCodigo, t.actividad)):(t.proyecto?esc(t.proyecto):"Sin actividad asignada"))+'</div></div>'+
         '<button class="btn danger small" data-quitar="'+esc(t.casco)+'">Quitar</button></div>';
     }).join("") : '<div class="empty" style="padding:20px 10px"><p>Nadie asignado aquí todavía para esta fecha.</p></div>';
 
@@ -908,8 +928,8 @@
       '<input type="text" id="mapa-colab-buscar" placeholder="Buscar por casco o nombre…" value="'+esc(state.mapaColabFiltro)+'">'+
       '<select id="mapa-colab-sel" size="6">'+colabOptionsFiltradas(state.mapaColabFiltro)+'</select>'+
       '<div class="field-row">'+
-        '<select id="mapa-proy-sel">'+proyectoOptionsHtml(sugeridoProyectoId)+'</select>'+
-        '<select id="mapa-act-sel">'+actividadOptionsHtml(sugeridoProyectoId,"")+'</select>'+
+        '<select id="mapa-proy-sel" data-buscar>'+proyectoOptionsHtml(sugeridoProyectoId)+'</select>'+
+        '<select id="mapa-act-sel" data-buscar>'+actividadOptionsHtml(sugeridoProyectoId,"")+'</select>'+
       '</div>'+
       '<button class="btn" id="btn-agregar-a-unidad" '+(state.dbReady===false?'disabled':'')+'>Agregar</button>'+
     '</div>';
@@ -1167,7 +1187,7 @@
     function codigoItemsHtml(){
       return codigosOrdenados.map(function(x){
         var alcanceTxt = x.alcance==="default" ? "Por defecto" : (proyectoNombre(x.alcance) || x.alcance);
-        return '<li><span class="nm '+(x.activo===false?"inactivo":"")+'"><span class="mono">'+esc(x.codigo)+'</span> — '+esc(x.descripcion)+
+        return '<li><span class="nm '+(x.activo===false?"inactivo":"")+'">'+(x.codigo?'<span class="mono">'+esc(x.codigo)+'</span> — ':'')+esc(x.descripcion)+
           '<div class="muted" style="font-size:11px">'+esc(alcanceTxt)+' · '+esc(x.categoria||"")+'</div></span>'+
           '<span><button class="btn secondary small" data-toggle-cod="'+x.id+'">'+(x.activo===false?"Reactivar":"Desactivar")+'</button> '+
           '<button class="btn danger small" data-del-cod="'+x.id+'">Eliminar</button></span></li>';
@@ -1239,6 +1259,114 @@
     });
   }
 
+
+  // ── Casillas con búsqueda ──────────────────────────────────────────────
+  // El <select data-buscar> sigue siendo la fuente de verdad (sus eventos "change" no cambian):
+  // se oculta y un botón abre un panel con buscador. Se aplica solo a cada casilla nueva.
+  (function(){
+    var panel = null, selAbierto = null, visibles = [], idxActivo = -1;
+    function normalizar(s){ return (s||"").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, ""); }
+    function sincronizar(sel){
+      var b = sel.__btnBuscar; if(!b) return;
+      var o = sel.options[sel.selectedIndex];
+      b.textContent = o ? o.textContent : "";
+      b.title = b.textContent;
+      b.disabled = sel.disabled;
+    }
+    function mejorar(sel){
+      if(sel.__btnBuscar) return;
+      var b = document.createElement("button");
+      b.type = "button";
+      b.className = "sel-buscar" + (sel.classList.contains("tbl-select") ? " tbl-select" : "");
+      if(sel.style.minWidth) b.style.minWidth = sel.style.minWidth;
+      sel.__btnBuscar = b;
+      sel.style.display = "none";
+      sel.parentNode.insertBefore(b, sel.nextSibling);
+      b.addEventListener("click", function(){ abrir(sel); });
+      sel.addEventListener("change", function(){ sincronizar(sel); });
+      new MutationObserver(function(){ sincronizar(sel); }).observe(sel, { childList:true, subtree:true, attributes:true, attributeFilter:["disabled"] });
+      sincronizar(sel);
+    }
+    function cerrar(){
+      if(panel){ panel.remove(); panel = null; }
+      if(selAbierto && selAbierto.__btnBuscar && document.body.contains(selAbierto.__btnBuscar)) selAbierto.__btnBuscar.focus();
+      selAbierto = null;
+    }
+    function elegir(valor){
+      var sel = selAbierto;
+      cerrar();
+      if(!sel || sel.value === valor) return;
+      sel.value = valor;
+      sel.dispatchEvent(new Event("change", { bubbles:true }));
+    }
+    function pintarLista(filtro){
+      var ul = panel.querySelector("ul");
+      var palabras = normalizar(filtro).split(/\s+/).filter(Boolean);
+      visibles = Array.prototype.filter.call(selAbierto.options, function(o){
+        if(!o.value) return !palabras.length; // "— sin asignar —" solo sin filtro
+        var t = normalizar(o.textContent);
+        return palabras.every(function(p){ return t.indexOf(p) >= 0; });
+      });
+      idxActivo = visibles.length ? 0 : -1;
+      ul.innerHTML = visibles.length ? visibles.map(function(o, i){
+        return '<li data-i="'+i+'" class="'+(i===idxActivo?"activo ":"")+(o.value===selAbierto.value?"elegido":"")+'">'+esc(o.textContent)+'</li>';
+      }).join("") : '<div class="vacio">Sin resultados</div>';
+    }
+    function marcarActivo(){
+      var lis = panel.querySelectorAll("li");
+      lis.forEach(function(li, i){ li.classList.toggle("activo", i===idxActivo); });
+      if(lis[idxActivo]) lis[idxActivo].scrollIntoView({ block:"nearest" });
+    }
+    function ubicar(btn){
+      var r = btn.getBoundingClientRect();
+      var ancho = Math.min(Math.max(r.width, 300), window.innerWidth - 16);
+      var izq = Math.min(Math.max(8, r.left), window.innerWidth - ancho - 8);
+      panel.style.width = ancho + "px";
+      panel.style.left = izq + "px";
+      var alto = panel.offsetHeight;
+      var arriba = r.bottom + 4;
+      if(arriba + alto > window.innerHeight - 8 && r.top - alto - 4 > 8) arriba = r.top - alto - 4;
+      panel.style.top = Math.max(8, arriba) + "px";
+    }
+    function abrir(sel){
+      if(selAbierto === sel){ cerrar(); return; }
+      cerrar();
+      selAbierto = sel;
+      panel = document.createElement("div");
+      panel.className = "buscar-panel";
+      panel.innerHTML = '<input type="text" placeholder="Buscar…" autocomplete="off"><ul role="listbox"></ul>';
+      document.body.appendChild(panel);
+      var input = panel.querySelector("input");
+      pintarLista("");
+      ubicar(sel.__btnBuscar);
+      input.focus();
+      input.addEventListener("input", function(){ pintarLista(input.value); });
+      input.addEventListener("keydown", function(e){
+        if(e.key==="ArrowDown"){ e.preventDefault(); if(idxActivo < visibles.length-1){ idxActivo++; marcarActivo(); } }
+        else if(e.key==="ArrowUp"){ e.preventDefault(); if(idxActivo > 0){ idxActivo--; marcarActivo(); } }
+        else if(e.key==="Enter"){ e.preventDefault(); if(visibles[idxActivo]) elegir(visibles[idxActivo].value); }
+        else if(e.key==="Escape"){ e.preventDefault(); cerrar(); }
+      });
+      panel.addEventListener("mousedown", function(e){ e.stopPropagation(); });
+      panel.querySelector("ul").addEventListener("click", function(e){
+        var li = e.target.closest("li"); if(li) elegir(visibles[+li.getAttribute("data-i")].value);
+      });
+    }
+    document.addEventListener("mousedown", function(e){
+      if(panel && !panel.contains(e.target) && !(selAbierto && e.target === selAbierto.__btnBuscar)) cerrar();
+    });
+    window.addEventListener("resize", function(){ if(panel) cerrar(); });
+    document.addEventListener("scroll", function(e){ if(panel && !panel.contains(e.target)) cerrar(); }, true);
+    function revisar(raiz){
+      if(raiz.nodeType !== 1) return;
+      if(raiz.matches && raiz.matches("select[data-buscar]")) mejorar(raiz);
+      raiz.querySelectorAll && raiz.querySelectorAll("select[data-buscar]").forEach(mejorar);
+    }
+    new MutationObserver(function(muts){
+      muts.forEach(function(m){ m.addedNodes.forEach(revisar); });
+    }).observe(document.body, { childList:true, subtree:true });
+    revisar(document.body);
+  })();
   boot();
   renderAll();
 })();
