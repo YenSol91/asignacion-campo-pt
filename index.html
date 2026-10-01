@@ -467,23 +467,33 @@
       : "";
   }
 
+  function errorLectura(e){
+    console.error(e);
+    var msg = e && e.code === "permission-denied"
+      ? "Firebase está rechazando el acceso a los datos (permission-denied). Revise las reglas de Firestore en la consola de Firebase."
+      : e && e.code === "resource-exhausted"
+        ? "Se agotó la cuota diaria gratuita de Firebase. Vuelve a funcionar al reiniciarse la cuota (medianoche, hora del Pacífico)."
+        : "No se pudieron leer los datos: " + ((e && e.message) || e);
+    if(window.__dbErrorMsg === msg) return;
+    onDbUnavailable(msg);
+  }
   function subscribeColaboradores(){
     db.collection("colaboradores").orderBy("nombre","asc").onSnapshot(function(snap){
       state.colaboradores = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
       renderAll();
-    }, function(e){ console.error(e); });
+    }, errorLectura);
   }
   function subscribeProyectos(){
     db.collection("proyectos").orderBy("nombre","asc").onSnapshot(function(snap){
       state.proyectos = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
       renderAll();
-    }, function(e){ console.error(e); });
+    }, errorLectura);
   }
   function subscribeCodigosPresupuestarios(){
     db.collection("codigos_presupuestarios").onSnapshot(function(snap){
       state.codigosPresupuestarios = snap.docs.map(function(d){ return Object.assign({id:d.id}, d.data()); });
       renderAll();
-    }, function(e){ console.error(e); });
+    }, errorLectura);
   }
   function subscribeAsignacionesDia(){
     db.collection("asignaciones").where("fecha","==",state.fecha).onSnapshot(function(snap){
@@ -492,7 +502,7 @@
       state.asignacionesDia[state.fecha] = byCol;
       if(state.tab==="asignar") renderAsignar();
       if(state.tab==="mapa") renderMapa();
-    }, function(e){ console.error(e); });
+    }, errorLectura);
   }
   function subscribeAsignacionesResumen(){
     db.collection("asignaciones").where("fecha",">=",state.resumenDesde).where("fecha","<=",state.resumenHasta).onSnapshot(function(snap){
@@ -500,7 +510,7 @@
       snap.docs.forEach(function(d){ var data = d.data(); (byCol[data.colaboradorId]=byCol[data.colaboradorId]||[]).push(data); });
       state.asignacionesResumen = byCol;
       if(state.tab==="resumen") renderResumen();
-    }, function(e){ console.error(e); });
+    }, errorLectura);
   }
 
   document.getElementById("nav").addEventListener("click", function(e){
