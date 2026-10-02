@@ -216,6 +216,7 @@
   .login-msg.err{ color:var(--rose); }
   .login-msg.ok{ color:var(--green); }
   .linkbtn{ background:none; border:none; padding:0; color:var(--clay-dark); cursor:pointer; font-size:12.5px; text-decoration:underline; margin-top:14px; }
+  .download-note{ margin:18px 0 0; padding-top:14px; border-top:1px solid var(--border); color:var(--ink-soft); font-size:12px; text-align:center; }
   .userbox{ display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:11.5px; color:var(--ink-soft); }
   .userbox span{ overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .userbox button{ flex:none; border:1px solid var(--border); background:var(--surface); border-radius:6px; padding:4px 8px; font-size:11.5px; cursor:pointer; color:var(--ink); }
@@ -233,6 +234,8 @@
     <button type="submit" class="btn" id="login-btn">Entrar</button>
     <div class="login-msg" id="login-msg" role="status"></div>
     <button type="button" class="linkbtn" id="login-reset">¿Olvidó su contraseña?</button>
+    <p class="download-note">Descarga interna para el equipo PT.</p>
+    <a class="btn secondary" href="downloads/asignacion-campo-pt.apk" download>Descargar app Android</a>
   </form>
 </div>
 
